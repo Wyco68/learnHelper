@@ -144,28 +144,29 @@ works (step by step) → real-life example → diagram → common mistakes →
 exam tip → one memorable takeaway. Never skip reasoning, never give the
 definition before the problem that motivates it. If two concepts are
 related, explicitly say how. Map this order onto the heading scheme
-below — `🧠 Concept` opens with problem+idea, `⚙️ How it Works` covers
-the mechanism, `🌍 Example` the real-life case, then mistakes/exam
-tip/remember close it out.
+below — `Concept` opens with problem+idea, `How it Works` covers the
+mechanism, `Example` the real-life case, then mistakes/exam tip/remember
+close it out.
 
-## Heading scheme (strict — only these, never deeper than `###`)
+## Heading scheme (strict — only these, never deeper than `###`, no emoji)
 Every lesson uses this fixed set of headings, repeated per concept.
 Students learn the structure after 2-3 lessons and stop spending effort
 searching for things — consistency beats novelty here.
 ```
 # Lesson Title
-📍 Overview
-🧠 Concept
-⚙️ How it Works
-🌍 Example
-⚠ Common Mistakes
-🎯 Exam Tips
-📌 Remember
-📝 Summary
+Overview
+Concept
+How it Works
+Example
+Common Mistakes
+Exam Tips
+Remember
+Summary
 ```
-Repeat `🧠 Concept` through `📌 Remember` once per major concept in the
-lesson (mirrors `_templates/lesson-template.md`). Never invent new
-heading names or go past 3 heading levels.
+Repeat `Concept` through `Remember` once per major concept in the lesson
+(mirrors `_templates/lesson-template.md`). Never invent new heading names
+or go past 3 heading levels. Plain text headings only — no emoji, ever,
+anywhere in generated lessons or this file.
 
 ## Writing style (strict — one idea per line)
 - **One idea per sentence. One sentence per line.** This is the #1 rule —
@@ -220,8 +221,8 @@ heading names or go past 3 heading levels.
 - Explain the diagram immediately below it, one line per arrow/step.
 
 **Callouts**
-- Use exactly 4 callout types, never invent more:
-  `> 💡 Key Idea`, `> ⚠️ Common Mistake`, `> 🎯 Exam Tip`, `> 📌 Remember`.
+- Use exactly 4 callout types, never invent more, no emoji prefix:
+  `> Key Idea:`, `> Common Mistake:`, `> Exam Tip:`, `> Remember:`.
 - Use sparingly — only when they improve readability, not on every
   paragraph.
 
@@ -231,7 +232,8 @@ heading names or go past 3 heading levels.
 
 **Headings**
 - Consistent hierarchy, never deeper than `###` (see Heading scheme).
-- Emojis only on major section headings, never inside normal paragraphs.
+- No emoji anywhere — not on headings, not in callouts, not in
+  paragraphs. Plain text only.
 
 **Color**
 - Plain markdown has no real font color — "color" comes from bold,
