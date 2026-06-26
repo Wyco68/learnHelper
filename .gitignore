@@ -9,3 +9,8 @@ tools/savelesson/savelesson
 # Editor/tooling local state
 .impeccable/
 **/.impeccable/
+
+# Next.js web app
+/node_modules/
+/.next/
+.env.local
