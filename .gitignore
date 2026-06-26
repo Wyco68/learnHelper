@@ -1,0 +1,11 @@
+# Personal lesson vault — never shipped in the public template.
+# Each user's own subjects/lessons live here, generated locally by savelesson.
+/vault/
+
+# Built binary — built locally at setup time (see README), not committed.
+tools/savelesson/savelesson.exe
+tools/savelesson/savelesson
+
+# Editor/tooling local state
+.impeccable/
+**/.impeccable/

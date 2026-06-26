@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
+    "streetsidesoftware.code-spell-checker",
+    "foam.foam-vscode",
+    "eamodio.gitlens",
+    "Gruntfuggly.todo-tree",
+    "bierner.markdown-mermaid",
+    "GitHub.github-vscode-theme",
+    "shd101wyy.markdown-preview-enhanced"
+  ]
+}
