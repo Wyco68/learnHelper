@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { currentUserId, resolveUserRoot } from "@/lib/vault/paths";
-import { buildVaultTree } from "@/lib/vault/tree";
+import { listTree } from "@/lib/vault/helper";
 
 export async function GET() {
-  const userRoot = await resolveUserRoot(currentUserId());
-  const tree = await buildVaultTree(userRoot);
-  return NextResponse.json(tree);
+  try {
+    const tree = await listTree();
+    return NextResponse.json(tree);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 502 });
+  }
 }

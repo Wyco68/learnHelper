@@ -1,20 +1,21 @@
 export interface Lesson {
+  id: string; // flat file stem, e.g. "01-intro"
   slug: string;
-  seq: number;
   title: string;
-  relPath: string; // relative to user vault root, e.g. "Wireless-Network/01-wireless.../01-wireless....md"
+  seq: number;
 }
 
-export interface Subject {
+export interface Folder {
   name: string;
-  shortcut: string | null;
   lessons: Lesson[];
 }
 
 export interface VaultTree {
-  subjects: Subject[];
+  folders: Folder[];
 }
 
-export interface UserConfig {
-  claudeApiKeyEncrypted?: string;
+// A selected lesson is identified by its folder + id.
+export interface LessonRef {
+  folder: string;
+  id: string;
 }

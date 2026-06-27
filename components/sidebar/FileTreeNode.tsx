@@ -1,53 +1,131 @@
 "use client";
 
 import { useState } from "react";
-import type { Subject } from "@/lib/vault/types";
+import type { Folder, LessonRef } from "@/lib/vault/types";
+import ConfirmModal from "../modals/ConfirmModal";
+import TrashIcon from "../icons/TrashIcon";
+import { useToast } from "../toast/ToastProvider";
+
+type PendingDelete =
+  | { kind: "folder" }
+  | { kind: "lesson"; id: string; title: string };
 
 export default function FileTreeNode({
-  subject,
-  selectedPath,
+  folder,
+  selected,
   onSelect,
+  onChanged,
 }: {
-  subject: Subject;
-  selectedPath: string | null;
-  onSelect: (relPath: string) => void;
+  folder: Folder;
+  selected: LessonRef | null;
+  onSelect: (ref: LessonRef) => void;
+  onChanged: () => void;
 }) {
   const [open, setOpen] = useState(true);
+  const [pending, setPending] = useState<PendingDelete | null>(null);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function confirmDelete() {
+    if (!pending) return;
+    setBusy(true);
+    try {
+      if (pending.kind === "folder") {
+        const res = await fetch(`/api/folders/${encodeURIComponent(folder.name)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("failed");
+        toast.success(`Deleted folder "${folder.name.replace(/-/g, " ")}".`);
+      } else {
+        const res = await fetch(
+          `/api/lesson/${encodeURIComponent(folder.name)}/${encodeURIComponent(pending.id)}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) throw new Error("failed");
+        toast.success(`Deleted lesson "${pending.title}".`);
+      }
+      onChanged();
+    } catch {
+      toast.error(
+        pending.kind === "folder"
+          ? `Could not delete folder "${folder.name.replace(/-/g, " ")}".`
+          : `Could not delete lesson "${pending.title}".`
+      );
+    } finally {
+      setBusy(false);
+      setPending(null);
+    }
+  }
 
   return (
     <div className="mb-1">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-gray-200 hover:bg-white/5"
-      >
-        <span className="text-gray-500">{open ? "▾" : "▸"}</span>
-        <span className="truncate font-medium">{subject.name.replace(/-/g, " ")}</span>
-        {subject.shortcut && (
-          <span className="ml-auto shrink-0 text-xs text-gray-500">/{subject.shortcut}</span>
-        )}
-      </button>
+      <div className="group flex items-center">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex flex-1 items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-gray-200 hover:bg-white/5"
+        >
+          <span className="text-gray-500">{open ? "▾" : "▸"}</span>
+          <span className="truncate font-medium">{folder.name.replace(/-/g, " ")}</span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setPending({ kind: "folder" });
+          }}
+          title="Delete folder"
+          className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-gray-500 hover:bg-red-500/10 hover:text-red-400 group-hover:flex"
+        >
+          <TrashIcon className="h-3.5 w-3.5" />
+        </button>
+      </div>
 
       {open && (
         <div className="ml-4 border-l border-white/10 pl-2">
-          {subject.lessons.length === 0 && (
+          {folder.lessons.length === 0 && (
             <p className="px-2 py-1 text-xs text-gray-500">No lessons yet</p>
           )}
-          {subject.lessons.map((lesson) => {
-            const isActive = selectedPath === lesson.relPath;
+          {folder.lessons.map((lesson) => {
+            const isActive =
+              selected?.folder === folder.name && selected?.id === lesson.id;
             return (
-              <button
-                key={lesson.relPath}
-                onClick={() => onSelect(lesson.relPath)}
-                className={`block w-full truncate rounded px-2 py-1 text-left text-sm ${
-                  isActive ? "bg-blue-600/20 text-blue-300" : "text-gray-300 hover:bg-white/5"
-                }`}
-                title={lesson.title}
-              >
-                {lesson.title}
-              </button>
+              <div key={lesson.id} className="group flex items-center">
+                <button
+                  onClick={() => onSelect({ folder: folder.name, id: lesson.id })}
+                  className={`flex-1 truncate rounded px-2 py-1 text-left text-sm ${
+                    isActive ? "bg-blue-600/20 text-blue-300" : "text-gray-300 hover:bg-white/5"
+                  }`}
+                  title={lesson.title}
+                >
+                  {lesson.title}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPending({ kind: "lesson", id: lesson.id, title: lesson.title });
+                  }}
+                  title="Delete lesson"
+                  className="mr-1 hidden h-5 w-5 shrink-0 items-center justify-center rounded text-gray-500 hover:bg-red-500/10 hover:text-red-400 group-hover:flex"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
             );
           })}
         </div>
+      )}
+
+      {pending && (
+        <ConfirmModal
+          title={pending.kind === "folder" ? "Delete folder" : "Delete lesson"}
+          message={
+            pending.kind === "folder"
+              ? `Delete folder "${folder.name.replace(/-/g, " ")}" and all its lessons? This cannot be undone.`
+              : `Delete lesson "${pending.title}"? This cannot be undone.`
+          }
+          busy={busy}
+          onConfirm={confirmDelete}
+          onCancel={() => setPending(null)}
+        />
       )}
     </div>
   );

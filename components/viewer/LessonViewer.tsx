@@ -2,23 +2,28 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import MarkdownRenderer from "./MarkdownRenderer";
+import type { LessonRef } from "@/lib/vault/types";
+import HtmlRenderer from "./HtmlRenderer";
 
-export default function LessonViewer({ relPath }: { relPath: string | null }) {
-  const [content, setContent] = useState<string | null>(null);
+export default function LessonViewer({ lesson }: { lesson: LessonRef | null }) {
+  const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!relPath) {
-      setContent(null);
+    if (!lesson) {
+      setHtml(null);
       return;
     }
-    setContent(null);
-    fetch(`/api/lesson/${relPath.split(/[\\/]/).map(encodeURIComponent).join("/")}`)
+    setHtml(null);
+    fetch(
+      `/api/lesson/${encodeURIComponent(lesson.folder)}/${encodeURIComponent(lesson.id)}`
+    )
       .then((r) => r.json())
-      .then((data) => setContent(data.content ?? `Error: ${data.error}`));
-  }, [relPath]);
+      .then((data) =>
+        setHtml(data.html ?? `<p>Error: ${data.error ?? "not found"}</p>`)
+      );
+  }, [lesson]);
 
-  if (!relPath) {
+  if (!lesson) {
     return (
       <div className="flex h-full items-center justify-center text-gray-500">
         Select a lesson from the sidebar
@@ -26,24 +31,26 @@ export default function LessonViewer({ relPath }: { relPath: string | null }) {
     );
   }
 
+  const key = `${lesson.folder}/${lesson.id}`;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={relPath}
+        key={key}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto max-w-3xl px-8 py-10"
       >
-        {content === null ? (
+        {html === null ? (
           <div className="space-y-3" aria-hidden>
             <div className="h-7 w-2/3 animate-pulse rounded bg-white/5" />
             <div className="h-4 w-full animate-pulse rounded bg-white/5" />
             <div className="h-4 w-5/6 animate-pulse rounded bg-white/5" />
           </div>
         ) : (
-          <MarkdownRenderer content={content} />
+          <HtmlRenderer html={html} />
         )}
       </motion.div>
     </AnimatePresence>

@@ -2,249 +2,200 @@
 
 ## 1. Purpose
 
-University Notes turns uploaded lecture material (slides, PDFs, images) into
-clean, deeply-explained study notes, then presents those notes in a
-code-editor-style web reader.
+University Notes is a web-based lesson library. It presents clean, deeply-explained
+study notes in a code-editor-style reader. Notes are written in plain high-school-level
+language with technically correct terminology, aimed at an Information Systems &
+Network Engineering program.
 
-The notes are rewritten in plain high-school-level language while keeping
-technical terms exact, aimed at an Information Systems & Network Engineering
-program. Every note follows one fixed teaching structure (the "Professor
-Method") so the student learns the layout once and never hunts for things
-again.
-
-There are two interfaces, with a clean split of responsibility:
-
-- **Claude Code (authoring):** add new lessons and generate / edit their
-  content. This is where uploaded files are read and rewritten.
-- **Next.js web app (viewing):** browse the subject/lesson tree and read the
-  rendered notes, with animation and correct diagram rendering. Read-only.
-
-The notes themselves are plain Markdown files on disk, so they stay portable
-and outlive either tool.
+**Content creation happens entirely outside the web application.**
+Claude Code (the CLI) is the author. The Next.js app is the reader.
 
 ---
 
-## 2. What the project does
+## 2. Architecture
 
-1. A source file is uploaded in a Claude Code chat (`.pptx`, `.pdf`, image,
-   etc.). The file itself is never stored — only its filename is recorded.
-2. Claude resolves which subject folder and lesson title it belongs to (the
-   subject always comes from the user, never guessed from file content).
-3. The `savelesson` helper creates the lesson as one flat Markdown file.
-4. Claude reads every point in the source and rewrites it into the fixed
-   lesson structure, writing the result into that file.
-5. The web app reads the vault folder and shows the subject/lesson tree on
-   the left and the rendered Markdown on the right.
+Two layers, each with a single non-overlapping responsibility.
+
+### 2.1 Next.js application — read and manage
+
+- Application UI (sidebar, lesson reader, modals)
+- Folder management (create, rename, delete, list)
+- Lesson management (rename, delete, list)
+- Browsing and navigation
+- Rendering lessons (HTML parsed into React via `HtmlRenderer`)
+- Mermaid diagram rendering, syntax highlighting
+
+The Next.js app **never** generates lesson content. It **never** calls Claude.
+It **never** contains AI-generation logic.
+
+### 2.2 Go helper (`vaultd`) — filesystem operations only
+
+A small Go HTTP service exposing exactly six operations:
+
+```
+CreateFolder()
+LoadLesson()
+DeleteLesson()
+RenameLesson()
+ListTree()
+DeleteFolder()
+```
+
+It receives fully-resolved names and paths and performs raw filesystem I/O.
+It contains no slugify logic, no sequence-number generation, no content logic.
 
 ---
 
-## 3. Storage model
+## 3. Claude Code — content creation (outside the app)
 
-Everything personal lives under `vault/` at the repo root. `vault/` is
-**gitignored** — it is the user's private notes, never shipped with the
-template. The template repo ships empty so anyone can clone it for their own
-subjects.
+Claude Code is the sole author of lesson content.
 
-Each lesson is **one flat Markdown file** (no per-lesson folder, no stored
-source files):
+**Responsibilities:**
+- Read uploaded lecture files (slides, PDFs, images)
+- Generate lesson HTML following the output contract
+- Regenerate and improve existing lessons
+- Save lesson files directly to `vault/`
+- Maintain `index.json` for each folder
+
+**How Claude Code saves a lesson:**
+
+```
+/generate
+  → Claude reads uploaded file
+  → Claude generates semantic HTML
+  → Claude writes vault/<Folder>/<id>.html
+  → Claude upserts vault/<Folder>/index.json
+  → Done — app refreshes on next load
+```
+
+Claude Code writes files using its own file tools. It does not go through any
+Next.js API route to create content. The Go helper (`vaultd`) is still the
+correct path for the app's management operations (delete, rename, list), but
+Claude Code writes lesson files directly.
+
+Claude must never:
+- choose app-level folder names without following the slug format
+- generate filesystem paths inconsistent with the storage model below
+- write anything to `app/`, `components/`, or `lib/`
+
+Claude returns **semantic HTML only** — never Markdown, never a file.
+Allowed tags: `h1 h2 h3 p ul ol li table thead tbody tr td th pre code blockquote
+strong em div class="mermaid"`. No inline styles, no `<style>`/`<script>`,
+no custom classes other than `class="mermaid"`.
+
+---
+
+## 4. Storage model
 
 ```
 vault/
-  .shortcuts.json                      -- "/code" -> Subject Name map (gitignored)
-  <Subject>/
-    README.md                          -- optional subject readme
-    NN-topic-slug.md                   -- one lesson, numbered + slugified
+  <folder-slug>/
+    index.json              -- ordered lesson index for this folder
+    01-topic-slug.html      -- one lesson's generated HTML
+    02-another-topic.html
 ```
 
-Example:
-
-```
-vault/Operating-System/01-introduction.md
-vault/Wireless-Network/01-wireless-computer-network-architecture.md
+`index.json` shape:
+```json
+[{ "id": "01-topic-slug", "slug": "topic-slug", "title": "Topic", "seq": 1 }]
 ```
 
-- `NN` is an auto-incrementing per-subject sequence number (`01`, `02`, ...).
-- The slug is the lowercase-hyphenated lesson title.
-- The original upload's filename is preserved only inside the note's
-  `**Source file:**` header line.
+- `id` = `<seq padded to 2 digits>-<slug>`, e.g. `"01-introduction"`
+- `slug` = lowercased, non-alphanumerics collapsed to `-`, leading/trailing `-` trimmed
+- `seq` = 1-based integer, monotonically increasing within the folder
 
-Per-subject `/code` shortcuts (e.g. `Wireless Network` -> `/wn`) are minted
-automatically and stored in `vault/.shortcuts.json`, with collisions resolved
-by appending a number (`wn`, `wn2`, ...).
+The `.html` file holds exactly the generated HTML. The app reads it verbatim.
+Gitignored and portable — never committed.
 
 ---
 
-## 4. Lesson document structure
+## 5. UI
 
-Every lesson uses one fixed heading scheme, never deeper than `###`, no
-emoji. The `Concept` ... `Remember` block repeats once per major concept.
+### Sidebar
 
 ```
-# Lesson Title
-Overview
-Concept
-How it Works
-Example
-Diagram
-Gotcha
-Exam Tips
-Remember
-Summary
-Self Check
+University Notes
+
+Subjects             [+]
+  <Folder 1>
+  <Folder 2>
+  ...
 ```
 
-Four callout types only, rendered as colored boxes in the web app:
+Clicking **+** opens a small modal with exactly one field:
 
-| Callout            | Meaning                         | Box color |
-|--------------------|---------------------------------|-----------|
-| `> Key Idea:`      | core insight of a concept       | blue      |
-| `> Common Mistake:`| the specific trap to avoid      | red       |
-| `> Exam Tip:`      | sample question + answer        | amber     |
-| `> Remember:`      | memorable closing takeaway      | green     |
+```
+Folder Name
+[Create]
+```
 
-Diagrams are always Mermaid (` ```mermaid `), one per concept, rendered
-client-side in the web reader.
-
-The full authoring rules live in [CLAUDE.md](CLAUDE.md); the skeleton lives in
-[_templates/lesson-template.md](_templates/lesson-template.md).
+There is no Upload button. There is no Generate button. There is no auth UI.
 
 ---
 
-## 5. Flows
-
-### 5.1 Authoring flow (Claude Code + savelesson)
-
-```
-upload file in chat
-   -> resolve subject (user-provided or matched) + title
-   -> savelesson new --subject ... --title ... --source <filename> --root vault
-        -> creates vault/<Subject>/NN-slug.md (empty), mints /code shortcut
-   -> Claude reads source, rewrites into the fixed lesson structure
-   -> savelesson explain --subject ... --lesson NN --file <generated.md> --root vault
-        -> writes the final Markdown into NN-slug.md
-   -> follow-up prompts edit that SAME file until a new file is uploaded
-```
-
-`savelesson` (Go CLI, `tools/savelesson/`) owns all filesystem layout:
-sequence numbering, slugifying, shortcut minting, flat-file writes. Its
-subcommands:
-
-| Command     | Purpose                                                        |
-|-------------|----------------------------------------------------------------|
-| `new`       | create `Subject/NN-slug.md`, mint shortcut, reserve sequence    |
-| `explain`   | (over)write a lesson's Markdown by name or sequence number      |
-| `migrate`   | flatten any legacy `NN-slug/NN-slug.md` folders into flat files |
-| `rename`    | legacy: fix `explanation.md` -> `NN-slug.md`                     |
-| `shortcuts` | list known `/code -> Subject` mappings                          |
-
-### 5.2 Viewing flow (Next.js web app)
+## 6. Viewing flow
 
 ```
 browser -> GET /vault
    -> AppShell renders sidebar + content pane
-   -> FileTree calls GET /api/tree
-        -> lib/vault/tree.ts walks vault/, returns subjects + lessons JSON
+   -> Sidebar calls GET /api/tree
+        -> Next.js calls vaultd ListTree()
+        -> returns folders + lessons JSON (from each index.json)
    -> user clicks a lesson
-   -> LessonViewer calls GET /api/lesson/<Subject>/<NN-slug>.md
-        -> reads the flat .md file, returns raw Markdown
-   -> MarkdownRenderer renders it:
-        - callout blockquotes  -> colored Callout boxes
-        - ```mermaid blocks    -> Mermaid component (client-side SVG)
-        - tables / code        -> GFM + syntax highlighting
-   -> Framer Motion animates the content swap on each lesson change
+   -> LessonViewer calls GET /api/lesson/<Folder>/<id>
+        -> Next.js calls vaultd LoadLesson(folder, id)
+        -> returns the stored HTML
+   -> HtmlRenderer parses HTML into React elements
+        (DOMParser walk — no dangerouslySetInnerHTML)
+        blockquote callouts → <Callout>, div.mermaid → <Mermaid>
+   -> Framer Motion animates the content swap
 ```
-
-The web app is read-only: it never writes to the vault.
 
 ---
 
-## 6. Tech stack and how each piece is used
+## 7. Go helper — interface
 
-| Layer            | Technology                         | Role in this project                                                            |
-|------------------|-------------------------------------|---------------------------------------------------------------------------------|
-| Framework        | Next.js 15 (App Router)             | Routing (`/vault`, `/settings`), server route handlers under `app/api/*`        |
-| Language         | TypeScript                          | All web code; strict mode                                                        |
-| UI               | React 18                            | Sidebar tree, lesson viewer, client components                                  |
-| Styling          | Tailwind CSS + `@tailwindcss/typography` | Dark code-editor look; `prose` classes style the rendered Markdown         |
-| Markdown         | `react-markdown` + `remark-gfm`     | Parse/render notes, GitHub-flavored tables                                       |
-| Code blocks      | `rehype-highlight` + `highlight.js` | Syntax highlighting (github-dark theme)                                          |
-| Diagrams         | `mermaid`                           | Client-side SVG diagrams; dark theme, responsive width                          |
-| Animation        | `framer-motion`                     | Fade/slide on lesson switch, diagram fade-in                                     |
-| Authoring CLI    | Go (`tools/savelesson`)             | All vault filesystem operations (create, write, sequence, shortcuts, migrate)   |
-| Notes storage    | Flat Markdown files under `vault/`  | Source of truth; gitignored, portable                                           |
+Runs on `localhost:4321`. Next.js API routes call it via `fetch` through
+`lib/vault/helper.ts` only.
 
-### Web file map
+| Method | Path | Body in | Body out |
+|--------|------|---------|----------|
+| `POST` | `/folder` | `{ name }` | `{ ok }` |
+| `DELETE` | `/folder/:name` | — | `{ ok }` |
+| `GET` | `/lesson/:folder/:id` | — | `{ html, title }` |
+| `DELETE` | `/lesson/:folder/:id` | — | `{ ok }` |
+| `POST` | `/lesson/:folder/:id/rename` | `{ newTitle }` | `{ ok }` |
+| `GET` | `/tree` | — | `{ folders: [{ name, lessons: [...] }] }` |
 
-```
-app/
-  page.tsx                       -- redirects / -> /vault
-  vault/page.tsx                 -- renders AppShell
-  settings/page.tsx              -- API-key settings page
-  api/
-    tree/route.ts                -- GET subject/lesson tree JSON
-    lesson/[...path]/route.ts    -- GET one lesson's raw Markdown
-    shortcuts/route.ts           -- GET /code -> subject map
-    generate/route.ts            -- POST upload -> Claude -> write (backend, optional)
-    settings/route.ts            -- GET/POST per-user Claude API key
-
-components/
-  layout/AppShell.tsx            -- two-pane editor layout
-  sidebar/FileTree.tsx, FileTreeNode.tsx
-  viewer/LessonViewer.tsx, MarkdownRenderer.tsx, Callout.tsx, Mermaid.tsx
-  settings/ApiKeyForm.tsx
-
-lib/
-  vault/  paths, slugify, sequence, lesson, shortcuts, tree, config, types
-          (TypeScript port of the savelesson logic — keeps web + CLI on the
-           same on-disk format)
-  crypto/secretBox.ts            -- AES-256-GCM for stored API keys
-  claude/ client, systemPrompt, generateLesson
-```
-
-### `lib/vault/` ↔ Go parity
-
-`lib/vault/*` mirrors `tools/savelesson/*` exactly (same slug rules, same
-`^(\d+)-` sequence regex, same `.shortcuts.json` shape) so the web app needs
-no Go dependency and both tools can operate on the same vault interchangeably.
+Note: `POST /lesson` (save) is still implemented in vaultd and is used by
+Claude Code (`/generate`) when it chooses to route through vaultd instead of
+writing files directly.
 
 ---
 
-## 7. Multi-user notes (current state)
+## 8. Tech stack
 
-- Per-user separation is structured as `vault/<userId>/...`, selected by a
-  `DEFAULT_USER_ID` environment variable. If a per-user folder does not exist,
-  the app falls back to the legacy `vault/` root so existing notes stay
-  visible.
-- An optional in-browser generation path exists in the backend
-  (`app/api/generate`, `app/api/settings`, `lib/claude/*`): each user can save
-  their own Claude API key (encrypted at rest with AES-256-GCM) and generate
-  lessons server-side. This path is **not currently surfaced in the web UI** —
-  the active authoring flow is Claude Code + `savelesson`. It remains available
-  as a backend for a future hosted, multi-user deployment.
+| Layer | Technology | Role |
+|-------|-----------|------|
+| Framework | Next.js 15 (App Router) | Routing, UI, API route handlers |
+| Language | TypeScript | All web code; strict mode |
+| UI | React 18 | Sidebar, modals, lesson viewer |
+| Styling | Tailwind CSS + `@tailwindcss/typography` | Dark code-editor look |
+| Lesson rendering | `HtmlRenderer` (DOMParser walk) | HTML → React, no dangerouslySetInnerHTML |
+| Code highlighting | `highlight.js` (client-side) | Syntax inside `<pre><code>` blocks |
+| Diagrams | `mermaid` | Client-side SVG from `div.mermaid` blocks |
+| Animation | `framer-motion` | Fade/slide on lesson switch |
+| Filesystem helper | Go HTTP service (`vaultd`) | Folder/lesson CRUD + tree listing |
+| Notes storage | `.html` + `index.json` under `vault/` | Source of truth; gitignored |
 
-### Out of scope (current version)
-
-- No real authentication (single env-configured user).
-- No database (filesystem is the store).
-- No deployment/hosting config (local `npm run dev`).
-- No editing of notes from the web UI (viewing only).
-- `.pptx` is not directly supported by the in-browser generation path
-  (PDF/image only); CLI authoring handles all formats via Claude Code.
+No AI SDK. No authentication. No upload handling. No streaming.
 
 ---
 
-## 8. Running it
+## 9. Out of scope
 
-```bash
-# Web reader (view notes)
-cp .env.local.example .env.local     # set DEFAULT_USER_ID, encryption secret
-npm install
-npm run dev                          # http://localhost:3000 -> /vault
-
-# Authoring CLI (one-time build)
-cd tools/savelesson && go build -o savelesson.exe .
-```
-
-Day-to-day authoring happens by uploading a file in Claude Code, which drives
-`savelesson` and writes the note; the web app picks it up on next load of the
-tree.
+- No database (filesystem via Go helper is the store).
+- No deployment/hosting beyond local dev.
+- No multi-tenancy.
+- No user authentication of any kind.
+- No lesson generation inside the application.

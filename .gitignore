@@ -3,8 +3,12 @@
 /vault/
 
 # Built binary — built locally at setup time (see README), not committed.
-tools/savelesson/savelesson.exe
-tools/savelesson/savelesson
+tools/vaultd/vaultd.exe
+tools/vaultd/vaultd
+
+# Local Claude subscription credential (encrypted) — never committed.
+/.claude-token.enc
+/.claude-secret.key
 
 # Editor/tooling local state
 .impeccable/

@@ -1,40 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { VaultTree } from "@/lib/vault/types";
+import type { Folder, LessonRef } from "@/lib/vault/types";
 import FileTreeNode from "./FileTreeNode";
 
 export default function FileTree({
-  selectedPath,
+  folders,
+  selected,
   onSelect,
+  onChanged,
 }: {
-  selectedPath: string | null;
-  onSelect: (relPath: string) => void;
+  folders: Folder[] | null;
+  selected: LessonRef | null;
+  onSelect: (ref: LessonRef) => void;
+  onChanged: () => void;
 }) {
-  const [tree, setTree] = useState<VaultTree | null>(null);
-
-  useEffect(() => {
-    fetch("/api/tree")
-      .then((r) => r.json())
-      .then(setTree);
-  }, []);
-
-  if (!tree) {
+  if (!folders) {
     return <p className="px-2 py-1 text-sm text-gray-500">Loading...</p>;
   }
 
-  if (tree.subjects.length === 0) {
+  if (folders.length === 0) {
     return <p className="px-2 py-1 text-sm text-gray-500">No subjects yet.</p>;
   }
 
   return (
     <div>
-      {tree.subjects.map((subject) => (
+      {folders.map((folder) => (
         <FileTreeNode
-          key={subject.name}
-          subject={subject}
-          selectedPath={selectedPath}
+          key={folder.name}
+          folder={folder}
+          selected={selected}
           onSelect={onSelect}
+          onChanged={onChanged}
         />
       ))}
     </div>

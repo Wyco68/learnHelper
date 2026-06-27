@@ -1,0 +1,44 @@
+# Coding Style
+
+Loaded by `/upgrade` only. Conventions already in use across this repo —
+match them, don't introduce a second style.
+
+## TypeScript / Next.js
+- Strict TS (`tsconfig.json` has `strict: true`). No `any` unless catching
+  an error (`catch (err: any)` is the one accepted exception, matching
+  existing route handlers).
+- App Router only (`app/`), route handlers as `route.ts` with named
+  `GET`/`POST`/`DELETE` exports.
+- Client components get an explicit `"use client"` at the top; server
+  components (route handlers, layout) don't.
+- Path alias `@/*` maps to repo root — use it (`@/lib/vault/helper`), not
+  deep relative imports, except for same-folder/sibling imports
+  (`./Modal`, `../sidebar/FileTree`).
+- One concern per `lib/` subfolder: `lib/vault/*` (naming, sanitizing,
+  vaultd client, types), `lib/claude/*` (Claude client + prompt),
+  `lib/auth/*` (token store). Don't blend them.
+
+## Go (`tools/vaultd`)
+- Single `main.go`, stdlib only (`net/http`, `encoding/json`,
+  `os`/`path/filepath`) — no framework, no third-party deps. Keep it that
+  way; the whole point of the Go helper is that it's small and dumb (see
+  [architecture.md](architecture.md)).
+- Every handler validates path-safety via `safeName()` before touching the
+  filesystem. Any new endpoint that takes a name/id from the request must
+  do the same.
+
+## Comments
+- Default to no comments. Add one only when the *why* isn't obvious from
+  the code — a non-obvious constraint, a workaround, a security boundary.
+  Never restate what the code already says.
+- Existing file-header comments (e.g. `lib/vault/sanitize.ts`,
+  `tools/vaultd/main.go`) explain a non-obvious *why* — follow that
+  pattern, don't write paragraph docstrings.
+
+## General
+- Don't add abstractions, helpers, or config flags for a single call site.
+- Don't add error handling for cases that can't happen — only validate at
+  real boundaries (user input, the uploaded file, the vaultd HTTP
+  response).
+- Match existing naming: `camelCase` for TS, `PascalCase` exported Go
+  funcs/types, kebab-case folder/file slugs in `vault/`.
