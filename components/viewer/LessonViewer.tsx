@@ -30,14 +30,18 @@ export default function LessonViewer({ relPath }: { relPath: string | null }) {
     <AnimatePresence mode="wait">
       <motion.div
         key={relPath}
-        initial={{ opacity: 0, x: 8 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -8 }}
-        transition={{ duration: 0.18 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto max-w-3xl px-8 py-10"
       >
         {content === null ? (
-          <p className="text-gray-500">Loading...</p>
+          <div className="space-y-3" aria-hidden>
+            <div className="h-7 w-2/3 animate-pulse rounded bg-white/5" />
+            <div className="h-4 w-full animate-pulse rounded bg-white/5" />
+            <div className="h-4 w-5/6 animate-pulse rounded bg-white/5" />
+          </div>
         ) : (
           <MarkdownRenderer content={content} />
         )}

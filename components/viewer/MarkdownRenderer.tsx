@@ -27,16 +27,17 @@ export default function MarkdownRenderer({ content }: { content: string }) {
             }
             return <blockquote>{children}</blockquote>;
           },
-          code({ className, children, ...props }) {
-            const isMermaid = className === "language-mermaid";
-            if (isMermaid) {
-              return <Mermaid code={String(children).trim()} />;
+          // Fenced ```mermaid blocks: react-markdown wraps the <code> in a
+          // <pre>, and rehype-highlight rewrites the class to "hljs
+          // language-mermaid" — so match by substring, and render the
+          // diagram in place of the <pre> (a div can't live inside <pre>).
+          pre({ children, ...props }) {
+            const child: any = Array.isArray(children) ? children[0] : children;
+            const cls: string = child?.props?.className ?? "";
+            if (/language-mermaid/.test(cls)) {
+              return <Mermaid code={flattenText(child.props.children)} />;
             }
-            return (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            );
+            return <pre {...props}>{children}</pre>;
           },
         }}
       >

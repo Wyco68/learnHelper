@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-// migrateSubject converts existing flat "NN-slug.md" lesson files in
-// subjectDir into the folder-per-lesson layout: NN-slug/NN-slug.md.
-// No original source file exists for these (none was ever saved), so only
-// the explanation moves. Folders that already exist are skipped, not erred.
+// migrateSubject flattens the folder-per-lesson layout into single flat
+// files: each "NN-slug/NN-slug.md" (or legacy "NN-slug/explanation.md")
+// becomes "NN-slug.md" directly under subjectDir, then the whole lesson
+// folder — including any stored source files (original.pdf etc.) — is
+// removed. Flat files already present are left untouched. A target flat
+// file that already exists is skipped, not overwritten.
 func migrateSubject(subjectDir string) (moved, skipped []string, err error) {
 	entries, err := os.ReadDir(subjectDir)
 	if os.IsNotExist(err) {
@@ -21,36 +22,42 @@ func migrateSubject(subjectDir string) (moved, skipped []string, err error) {
 	}
 
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
-			continue
-		}
-		if !seqPrefix.MatchString(e.Name()) {
-			continue // not a numbered lesson file (e.g. README.md)
+		if !e.IsDir() || !seqPrefix.MatchString(e.Name()) {
+			continue // only numbered lesson folders
 		}
 
-		base := strings.TrimSuffix(e.Name(), ".md")
+		base := e.Name()
 		lessonDir := filepath.Join(subjectDir, base)
-		flatPath := filepath.Join(subjectDir, e.Name())
+		flatPath := filepath.Join(subjectDir, base+".md")
 
-		if _, err := os.Stat(lessonDir); err == nil {
-			skipped = append(skipped, e.Name()+" (folder already exists)")
+		// Prefer NN-slug.md inside the folder, fall back to explanation.md.
+		srcMd := filepath.Join(lessonDir, base+".md")
+		if _, err := os.Stat(srcMd); err != nil {
+			alt := filepath.Join(lessonDir, "explanation.md")
+			if _, err2 := os.Stat(alt); err2 == nil {
+				srcMd = alt
+			} else {
+				skipped = append(skipped, base+" (no generated markdown found inside)")
+				continue
+			}
+		}
+
+		if _, err := os.Stat(flatPath); err == nil {
+			skipped = append(skipped, base+".md (flat file already exists)")
 			continue
 		}
 
-		if err := os.MkdirAll(lessonDir, 0o755); err != nil {
-			return moved, skipped, fmt.Errorf("create %s: %w", lessonDir, err)
-		}
-		content, err := os.ReadFile(flatPath)
+		content, err := os.ReadFile(srcMd)
 		if err != nil {
-			return moved, skipped, fmt.Errorf("read %s: %w", flatPath, err)
+			return moved, skipped, fmt.Errorf("read %s: %w", srcMd, err)
 		}
-		if err := os.WriteFile(filepath.Join(lessonDir, base+".md"), content, 0o644); err != nil {
-			return moved, skipped, fmt.Errorf("write %s.md for %s: %w", base, base, err)
+		if err := os.WriteFile(flatPath, content, 0o644); err != nil {
+			return moved, skipped, fmt.Errorf("write %s: %w", flatPath, err)
 		}
-		if err := os.Remove(flatPath); err != nil {
-			return moved, skipped, fmt.Errorf("remove old flat file %s: %w", flatPath, err)
+		if err := os.RemoveAll(lessonDir); err != nil {
+			return moved, skipped, fmt.Errorf("remove lesson folder %s: %w", lessonDir, err)
 		}
-		moved = append(moved, e.Name()+" -> "+base+"/"+base+".md")
+		moved = append(moved, base+"/ -> "+base+".md (folder + any source files removed)")
 	}
 	return moved, skipped, nil
 }

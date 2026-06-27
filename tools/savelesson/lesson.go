@@ -12,9 +12,9 @@ import (
 
 var seqPrefix = regexp.MustCompile(`^(\d+)-`)
 
-// nextSequence scans subjectDir for existing "NN-slug" folders and legacy
-// "NN-slug.md" files, returning the next free sequence number (1 if the
-// folder is missing or empty).
+// nextSequence scans subjectDir for existing "NN-slug.md" lesson files
+// (and any legacy "NN-slug" folders), returning the next free sequence
+// number (1 if the folder is missing or empty).
 func nextSequence(subjectDir string) (int, error) {
 	entries, err := os.ReadDir(subjectDir)
 	if os.IsNotExist(err) {
@@ -26,8 +26,7 @@ func nextSequence(subjectDir string) (int, error) {
 
 	max := 0
 	for _, e := range entries {
-		name := e.Name()
-		name = strings.TrimSuffix(name, ".md")
+		name := strings.TrimSuffix(e.Name(), ".md")
 		m := seqPrefix.FindStringSubmatch(name)
 		if m == nil {
 			continue
@@ -43,11 +42,11 @@ func nextSequence(subjectDir string) (int, error) {
 	return max + 1, nil
 }
 
-// NewLesson creates Subject/NN-topic-slug/ under vaultRoot. The uploaded
-// file itself is never copied/saved — only its filename is recorded, for
-// the caller to print/embed as a "Source file:" reference in the
-// generated note. Hard-errors (no overwrite) if the target lesson folder
-// already exists.
+// NewLesson creates Subject/NN-topic-slug.md under vaultRoot as a single
+// flat file (no per-lesson folder). The uploaded file itself is never
+// copied/saved — only its filename is recorded, for the caller to embed as
+// a "Source file:" reference. Hard-errors (no overwrite) if the target
+// lesson file already exists. Returns the lesson file path.
 func NewLesson(vaultRoot, subject, title, sourceName string) (string, error) {
 	subjectDir := filepath.Join(vaultRoot, subject)
 	if err := os.MkdirAll(subjectDir, 0o755); err != nil {
@@ -59,39 +58,45 @@ func NewLesson(vaultRoot, subject, title, sourceName string) (string, error) {
 		return "", fmt.Errorf("determine sequence number: %w", err)
 	}
 	slug := slugify(title)
-	lessonName := fmt.Sprintf("%02d-%s", seq, slug)
-	lessonDir := filepath.Join(subjectDir, lessonName)
+	lessonName := fmt.Sprintf("%02d-%s.md", seq, slug)
+	lessonFile := filepath.Join(subjectDir, lessonName)
 
-	if _, err := os.Stat(lessonDir); err == nil {
-		return "", fmt.Errorf("lesson folder %q already exists; pick a different title or remove it first", lessonDir)
+	if _, err := os.Stat(lessonFile); err == nil {
+		return "", fmt.Errorf("lesson file %q already exists; pick a different title or remove it first", lessonFile)
 	}
 
-	if err := os.MkdirAll(lessonDir, 0o755); err != nil {
-		return "", fmt.Errorf("create lesson folder: %w", err)
+	// Reserve the sequence by creating an empty file; the explanation is
+	// (over)written into it by WriteExplanation.
+	if err := os.WriteFile(lessonFile, []byte{}, 0o644); err != nil {
+		return "", fmt.Errorf("create lesson file: %w", err)
 	}
 
-	_ = sourceName // kept as a documented parameter, not copied to disk
-	return lessonDir, nil
+	_ = sourceName // documented parameter, not copied to disk
+	return lessonFile, nil
 }
 
-// WriteExplanation (over)writes the explanation markdown inside an existing
-// lesson folder, named after the folder itself (e.g. 01-introduction/
-// 01-introduction.md) rather than a generic "explanation.md".
-func WriteExplanation(lessonDir string, content []byte) error {
-	if _, err := os.Stat(lessonDir); err != nil {
-		return fmt.Errorf("lesson folder: %w", err)
+// WriteExplanation (over)writes the explanation markdown at the given flat
+// lesson file path (e.g. Subject/01-introduction.md).
+func WriteExplanation(lessonFile string, content []byte) error {
+	if err := os.MkdirAll(filepath.Dir(lessonFile), 0o755); err != nil {
+		return fmt.Errorf("create subject folder: %w", err)
 	}
-	name := filepath.Base(lessonDir) + ".md"
-	return os.WriteFile(filepath.Join(lessonDir, name), content, 0o644)
+	return os.WriteFile(lessonFile, content, 0o644)
 }
 
-// FindLessonDir resolves a lesson by its folder name (e.g. "02-process-
-// scheduling") or by bare sequence number (e.g. "2" or "02") within
-// subjectDir.
-func FindLessonDir(subjectDir, lessonNameOrSeq string) (string, error) {
-	direct := filepath.Join(subjectDir, lessonNameOrSeq)
-	if info, err := os.Stat(direct); err == nil && info.IsDir() {
-		return direct, nil
+// FindLessonFile resolves a lesson by its file name (e.g. "02-process-
+// scheduling.md" or "02-process-scheduling") or by bare sequence number
+// (e.g. "2" or "02") within subjectDir, returning the flat .md path.
+func FindLessonFile(subjectDir, lessonNameOrSeq string) (string, error) {
+	candidates := []string{lessonNameOrSeq}
+	if !strings.HasSuffix(lessonNameOrSeq, ".md") {
+		candidates = append(candidates, lessonNameOrSeq+".md")
+	}
+	for _, c := range candidates {
+		p := filepath.Join(subjectDir, c)
+		if info, err := os.Stat(p); err == nil && !info.IsDir() {
+			return p, nil
+		}
 	}
 
 	n, err := strconv.Atoi(lessonNameOrSeq)
@@ -105,7 +110,7 @@ func FindLessonDir(subjectDir, lessonNameOrSeq string) (string, error) {
 	}
 	var matches []string
 	for _, e := range entries {
-		if !e.IsDir() {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
 			continue
 		}
 		m := seqPrefix.FindStringSubmatch(e.Name())

@@ -75,7 +75,7 @@ Explain every arrow right below the diagram, one line per arrow.
 
 ---
 
-## Common Mistakes
+## Gotcha
 
 What students often get wrong here.
 

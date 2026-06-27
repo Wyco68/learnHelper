@@ -77,16 +77,16 @@ session.
    purpose.
 2. Resolve subject + title via the Input grammar above — do this BEFORE
    reading/processing file content, not after.
-3. **Create the lesson folder immediately, the moment subject + title are
+3. **Create the lesson file immediately, the moment subject + title are
    resolved — before writing any explanation.** Call
    `savelesson new --subject ... --title ... --source <original-filename> --root vault`
    (no `--explain` yet) right away. `--source` is a **filename reference
    only** — the uploaded file is never copied or saved to disk. The tool
    just records the name so it can be echoed/embedded as a "Source file:"
    line in the generated note's header.
-4. Track the "current lesson folder" = the path `savelesson new` just
-   printed. This is the source of truth for where everything for this
-   lesson goes from here on.
+4. Track the "current lesson file" = the flat `Subject/NN-slug.md` path
+   `savelesson new` just printed. This is the source of truth for where the
+   explanation for this lesson goes.
 5. Read every point in the file, nothing skipped, rewrite using
    `_templates/lesson-template.md`. Put the original filename in the
    note's `**Source file:**` header field — that's the only place the
@@ -95,12 +95,12 @@ session.
    (or `savelesson new ... --explain <generated-md>` in the same call as
    step 3, if the explanation is already fully written by then).
 7. Every following user prompt (until a NEW file is uploaded) = treat as
-   instruction to edit/append to that SAME current lesson's `NN-slug.md`
-   (use `savelesson explain` to rewrite it, or edit the file directly —
-   both land in the same folder). Do not create a new lesson for
-   follow-up prompts.
+   instruction to edit/append to that SAME current lesson's
+   `Subject/NN-slug.md` file (use `savelesson explain` to rewrite it, or
+   edit the file directly). Do not create a new lesson for follow-up
+   prompts.
 8. When a new file is uploaded, repeat from step 1 — new file becomes the
-   new "current lesson folder".
+   new "current lesson file".
 
 ## Storage layout (strict)
 Everything personal — every subject and lesson — lives under `vault/` at
@@ -109,14 +109,14 @@ notes, never part of the public template. The template repo itself ships
 empty (no `vault/` committed), so any user can clone it for their own
 subjects.
 
-Every lesson = **one folder**, not a flat file. **The uploaded source
-file itself is never saved** — only its filename, referenced in the
+Every lesson = **one flat markdown file**, not a folder. **The uploaded
+source file itself is never saved** — only its filename, referenced in the
 note's header:
 ```
-vault/Subject/NN-topic-slug/
-  NN-topic-slug.md   -- the generated lesson note (same name as folder);
-                        its **Source file:** header line names the
-                        original upload, but the upload itself isn't here
+vault/Subject/NN-topic-slug.md   -- the generated lesson note; its
+                                    **Source file:** header line names the
+                                    original upload, but the upload itself
+                                    isn't stored anywhere
 ```
 Build/use the helper tool at `tools/savelesson` (Go, `go build -o savelesson.exe .`
 inside that folder — see README for one-time setup) instead of manual
@@ -125,27 +125,28 @@ mkdir:
 savelesson new --subject <Name> --title "<Lesson Title>" --source "<original-filename.ext>" --explain "<path-to-generated-md>" --root vault
 ```
 This auto-picks the next `NN` sequence number per subject, slugifies the
-title, and writes the explanation as `NN-topic-slug.md` (folder's own
-name) — all in one call. `--source` only needs to be a filename, not a
-real path — nothing is read from or copied off disk for it. Always pass
-`--root vault` (or run from inside `vault/`). See
-`tools/savelesson/main.go` for `explain`/`migrate`/`rename` subcommands.
+title, and writes the explanation as the flat file `NN-topic-slug.md` —
+all in one call. `--source` only needs to be a filename, not a real path —
+nothing is read from or copied off disk for it. Always pass `--root vault`
+(or run from inside `vault/`). See `tools/savelesson/main.go` for
+`explain`/`migrate`/`rename` subcommands.
 
 ## Naming
-`NN-short-topic-slug` folder style — numbered, lowercase, hyphens. (Legacy
-flat `NN-slug.md` files were migrated to this folder layout via
+`NN-short-topic-slug.md` flat file style — numbered, lowercase, hyphens,
+one file per lesson directly under the subject folder. (The earlier
+folder-per-lesson layout, and any stored source files, were flattened via
 `savelesson migrate --all`.)
 
 ## Teaching method (strict — "Professor Method")
 Write like a PhD professor teaching intelligent high-schoolers with zero
 prior knowledge. Teach, don't summarize. Per concept, cover in order:
 problem it solves → why it's a problem → the idea/definition → how it
-works (step by step) → real-life example → diagram → common mistakes →
+works (step by step) → real-life example → diagram → gotcha →
 exam tip → one memorable takeaway. Never skip reasoning, never give the
 definition before the problem that motivates it. If two concepts are
 related, explicitly say how. Map this order onto the heading scheme
 below — `Concept` opens with problem+idea, `How it Works` covers the
-mechanism, `Example` the real-life case, then mistakes/exam tip/remember
+mechanism, `Example` the real-life case, then gotcha/exam tip/remember
 close it out.
 
 ## Heading scheme (strict — only these, never deeper than `###`, no emoji)
@@ -158,7 +159,7 @@ Overview
 Concept
 How it Works
 Example
-Common Mistakes
+Gotcha
 Exam Tips
 Remember
 Summary

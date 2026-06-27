@@ -1,6 +1,7 @@
-// Command savelesson keeps an uploaded source file and its generated
-// explanation together as one folder per lesson inside the university-notes
-// vault: Subject/NN-topic-slug/{original.<ext>, explanation.md}.
+// Command savelesson writes each generated lesson as one flat markdown file
+// inside the university-notes vault: Subject/NN-topic-slug.md. The uploaded
+// source file is never saved — only its filename is referenced in the note's
+// header.
 package main
 
 import (
@@ -40,8 +41,8 @@ func usage() {
 Commands:
   new      --subject NAME --title "TITLE" --source PATH [--explain MD_PATH] [--root VAULT_ROOT]
   explain  --subject NAME --lesson NN-slug-or-NN --file MD_PATH [--root VAULT_ROOT]
-  migrate  --subject NAME [--root VAULT_ROOT]   (or --all instead of --subject)
-  rename   --subject NAME [--root VAULT_ROOT]   (or --all) -- fixes explanation.md -> NN-slug.md
+  migrate  --subject NAME [--root VAULT_ROOT]   (or --all) -- flatten NN-slug/NN-slug.md -> NN-slug.md, drop source files
+  rename   --subject NAME [--root VAULT_ROOT]   (or --all) -- legacy: fixes explanation.md -> NN-slug.md inside any remaining folders
   shortcuts [--root VAULT_ROOT]                 -- list known "/code -> Subject" shortcuts
 
 --subject also accepts a "/code" shortcut (see shortcuts above) and
@@ -84,7 +85,7 @@ func cmdNew(args []string) {
 		os.Exit(1)
 	}
 
-	lessonDir, err := NewLesson(rootDir, subjectName, *title, *source)
+	lessonFile, err := NewLesson(rootDir, subjectName, *title, *source)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
@@ -96,7 +97,7 @@ func cmdNew(args []string) {
 			fmt.Fprintln(os.Stderr, "error reading --explain file:", err)
 			os.Exit(1)
 		}
-		if err := WriteExplanation(lessonDir, content); err != nil {
+		if err := WriteExplanation(lessonFile, content); err != nil {
 			fmt.Fprintln(os.Stderr, "error writing explanation:", err)
 			os.Exit(1)
 		}
@@ -108,7 +109,7 @@ func cmdNew(args []string) {
 	}
 
 	fmt.Fprintf(os.Stderr, "source file (reference only, not saved): %s\n", filepath.Base(*source))
-	fmt.Println(lessonDir)
+	fmt.Println(lessonFile)
 }
 
 func cmdExplain(args []string) {
@@ -132,7 +133,7 @@ func cmdExplain(args []string) {
 	}
 
 	subjectDir := filepath.Join(rootDir, subjectName)
-	lessonDir, err := FindLessonDir(subjectDir, *lesson)
+	lessonFile, err := FindLessonFile(subjectDir, *lesson)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
@@ -143,11 +144,11 @@ func cmdExplain(args []string) {
 		fmt.Fprintln(os.Stderr, "error reading --file:", err)
 		os.Exit(1)
 	}
-	if err := WriteExplanation(lessonDir, content); err != nil {
+	if err := WriteExplanation(lessonFile, content); err != nil {
 		fmt.Fprintln(os.Stderr, "error writing explanation:", err)
 		os.Exit(1)
 	}
-	fmt.Println(lessonDir)
+	fmt.Println(lessonFile)
 }
 
 func cmdMigrate(args []string) {

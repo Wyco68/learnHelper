@@ -92,9 +92,9 @@ else under `vault/`.
 Every lesson lands at:
 
 ```text
-vault/<Subject>/NN-topic-slug/
-  NN-topic-slug.md   -- the generated note (its header names the
-                         original upload — the upload itself isn't saved)
+vault/<Subject>/NN-topic-slug.md   -- the generated note, one flat file
+                                      (its header names the original upload
+                                      — the upload itself isn't saved)
 ```
 
 Follow-up messages (until you upload a new file) edit that same lesson's

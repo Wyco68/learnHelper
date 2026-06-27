@@ -21,25 +21,18 @@ async function listLessons(subjectDir: string, subjectName: string): Promise<Les
   const lessons: Lesson[] = [];
 
   for (const e of entries) {
-    if (!e.isDirectory()) continue;
-    const m = seqPrefix.exec(e.name);
-    if (!m) continue;
+    if (!e.isFile() || !e.name.endsWith(".md")) continue;
+    const base = e.name.replace(/\.md$/, "");
+    const m = seqPrefix.exec(base);
+    if (!m) continue; // skip non-numbered files like README.md
     const seq = parseInt(m[1], 10);
-    const mdPath = path.join(subjectDir, e.name, `${e.name}.md`);
-    if (
-      !(await fs
-        .stat(mdPath)
-        .then(() => true)
-        .catch(() => false))
-    ) {
-      continue;
-    }
+    const mdPath = path.join(subjectDir, e.name);
     const title = await readTitle(mdPath, m[2].replace(/-/g, " "));
     lessons.push({
-      slug: e.name,
+      slug: base,
       seq,
       title,
-      relPath: path.join(subjectName, e.name, `${e.name}.md`),
+      relPath: path.join(subjectName, e.name),
     });
   }
 
