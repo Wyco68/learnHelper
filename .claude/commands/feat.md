@@ -1,4 +1,4 @@
-# /upgrade
+# /feat
 
 ## Purpose
 Application development only.
@@ -35,7 +35,7 @@ irrelevant to application work.
 
 ## Redirect rule
 If the request belongs to lesson generation, stop and tell the user to use
-`/generate`. Do not generate or rewrite lesson content here.
+`/lect`. Do not generate or rewrite lesson content here.
 
 ## Verification
 After any change: `npx tsc --noEmit` for the Next.js app, `go build` for

@@ -11,7 +11,7 @@ directory as the handoff point.
 Claude Code is the only tool that writes lesson content.
 
 ```
-/generate (Claude Code CLI)
+/lect (Claude Code CLI)
   → Claude reads uploaded lecture file (PDF, image, slides)
   → Claude generates semantic HTML following the output contract
   → Claude writes vault/<Folder>/<id>.html
@@ -120,6 +120,6 @@ FileTreeNode (hover → trash icon)
 
 | Layer | Files | Responsibility |
 |---|---|---|
-| **Claude Code** | `/generate` command | Content creation: generate HTML, write vault/ files, update index.json |
+| **Claude Code** | `/lect` command | Content creation: generate HTML, write vault/ files, update index.json |
 | **Next.js** | `app/api/*`, `lib/vault/*`, `components/*` | Read and manage: tree, load lesson, delete/rename folder and lesson |
 | **vaultd** | `tools/vaultd/main.go` | Pure filesystem I/O over HTTP. Zero naming logic, zero content logic |

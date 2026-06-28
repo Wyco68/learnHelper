@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 const VARIANTS = {
   "Key Idea": { border: "border-blue-800/60", bg: "bg-blue-950/30", label: "text-blue-300" },
   "Common Mistake": { border: "border-red-800/60", bg: "bg-red-950/30", label: "text-red-300" },
-  "Exam Tip": { border: "border-amber-800/60", bg: "bg-amber-950/30", label: "text-amber-300" },
+  "Exam Tip": { border: "border-yellow-700/60", bg: "bg-yellow-950/30", label: "text-yellow-300" },
   Remember: { border: "border-emerald-800/60", bg: "bg-emerald-950/30", label: "text-emerald-300" },
 } as const;
 

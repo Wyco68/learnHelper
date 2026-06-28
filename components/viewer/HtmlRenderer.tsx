@@ -55,6 +55,33 @@ function nodeToReact(node: Node, key: number): ReactNode {
     return <blockquote key={key}>{childrenToReact(el)}</blockquote>;
   }
 
+  // "Concept: <Name>" headings start a new major section — set them apart
+  // from the plain repeated sub-headings (How it Works, Example, etc.) with
+  // distinct size/color instead of identical h2 styling.
+  if (tag === "h2" && /^Concept:/.test(el.textContent ?? "")) {
+    return (
+      <h2
+        key={key}
+        className="!mt-14 !text-4xl !font-bold !text-blue-300"
+      >
+        {childrenToReact(el)}
+      </h2>
+    );
+  }
+
+  // "Overview" is the lesson's opening section — set apart with its own
+  // color, same treatment as Concept headings.
+  if (tag === "h2" && (el.textContent ?? "").trim() === "Overview") {
+    return (
+      <h2
+        key={key}
+        className="!mt-2 !text-4xl !font-bold !text-purple-300"
+      >
+        {childrenToReact(el)}
+      </h2>
+    );
+  }
+
   if (PASS_THROUGH.has(tag)) {
     return createElement(tag, { key }, childrenToReact(el));
   }
@@ -83,7 +110,7 @@ export default function HtmlRenderer({ html }: { html: string }) {
       : null;
 
   return (
-    <div className="prose prose-invert max-w-none prose-headings:font-semibold prose-h1:text-3xl prose-h2:text-xl prose-h3:text-lg prose-table:text-sm">
+    <div className="prose prose-invert prose-lg max-w-none prose-headings:font-semibold prose-h1:text-5xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-lg prose-li:text-lg prose-table:text-base">
       {doc ? childrenToReact(doc.body) : null}
     </div>
   );

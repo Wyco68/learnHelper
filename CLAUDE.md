@@ -7,15 +7,14 @@ implementation details — those live in the two command files and `docs/`.
 Lesson notes generated from uploaded slides/PDFs/images, rewritten in plain
 high-school-level language, technical terms kept correct (Information
 Systems & Network Engineering program). Architecture: `docs/architecture.md`
-(read via `/upgrade`). Repo rules for humans: [README.md](README.md).
+(read via `/feat`). Repo rules for humans: [README.md](README.md).
 
 ## Command Gatekeeper (strict)
 This repository operates in strict command mode. Every user request must
 begin with exactly one of:
 
-- `/generate`
-- `/upgrade`
-- `/bug`
+- `/lect`
+- `/feat`
 
 If a prompt does not begin with one of these commands:
 
@@ -32,38 +31,31 @@ Invalid command.
 
 Start your request with one of:
 
-/generate
+/lect
 - Lesson generation and lesson maintenance.
 
-/upgrade
+/feat
 - Application development and project improvements.
-
-/bug
-- Diagnose and fix an error (paste the error after the command).
 ```
 
 Do not make exceptions. Do not infer which command the user intended. Wait
 until a valid command is provided before proceeding.
 
-## The three commands
-- **`/generate`** — [.claude/commands/generate.md](.claude/commands/generate.md).
+## The two commands
+- **`/lect`** — [.claude/commands/lect.md](.claude/commands/lect.md).
   Lesson generation and maintenance only. Loads only
   `docs/teaching-guidelines.md`, `docs/html-output-contract.md`,
   `docs/lesson-template.md`.
-- **`/upgrade`** — [.claude/commands/upgrade.md](.claude/commands/upgrade.md).
+- **`/feat`** — [.claude/commands/feat.md](.claude/commands/feat.md).
   Application development only. Loads only `docs/architecture.md`,
   `docs/coding-style.md`, `docs/ui-guidelines.md`, `docs/api-contract.md`.
-- **`/bug`** — [.claude/commands/bug.md](.claude/commands/bug.md).
-  `/upgrade`-scoped shortcut: error text typed/pasted after the command is
-  the bug report — diagnose and fix it under `/upgrade`'s rules. Same doc
-  set as `/upgrade`.
 
 ## Never mix responsibilities (strict)
 Each command is self-contained and loads only its own docs. A request that
 needs both lesson content changes and application changes must be split
-into two separate `/generate` and `/upgrade` turns — never both under one
+into two separate `/lect` and `/feat` turns — never both under one
 command.
 
 Generated lesson files (`vault/**/*.html`, `vault/**/index.json`) are
-**application data**, not application source. `/upgrade` never edits them
+**application data**, not application source. `/feat` never edits them
 except for an explicit, requested migration or format conversion.

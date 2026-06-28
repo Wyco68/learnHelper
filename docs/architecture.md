@@ -1,6 +1,6 @@
 # Architecture
 
-Loaded by `/upgrade` only. Canonical docs (kept at repo root, not
+Loaded by `/feat` only. Canonical docs (kept at repo root, not
 duplicated here — read both before any architecture-affecting change):
 
 - [SPECIFICATION.md](../SPECIFICATION.md) — the two-layer contract
@@ -18,5 +18,5 @@ Don't move logic across the two layers when fixing or extending the app:
 - Don't add filesystem writes to a React component or API route directly
   — always through `lib/vault/helper.ts` → `vaultd`.
 - Don't add any AI generation, Claude API calls, or upload-and-generate
-  logic to the Next.js app — content creation belongs to `/generate`
+  logic to the Next.js app — content creation belongs to `/lect`
   (Claude Code), not to the web app.

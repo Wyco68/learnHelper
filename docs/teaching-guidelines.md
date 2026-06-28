@@ -1,6 +1,6 @@
 # Teaching Guidelines
 
-Loaded by `/generate` only.
+Loaded by `/lect` only.
 
 ## Teaching method (strict — "Professor Method")
 Write like a PhD professor teaching intelligent high-schoolers with zero

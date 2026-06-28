@@ -60,7 +60,7 @@ Claude Code is the sole author of lesson content.
 **How Claude Code saves a lesson:**
 
 ```
-/generate
+/lect
   → Claude reads uploaded file
   → Claude generates semantic HTML
   → Claude writes vault/<Folder>/<id>.html
@@ -168,7 +168,7 @@ Runs on `localhost:4321`. Next.js API routes call it via `fetch` through
 | `GET` | `/tree` | — | `{ folders: [{ name, lessons: [...] }] }` |
 
 Note: `POST /lesson` (save) is still implemented in vaultd and is used by
-Claude Code (`/generate`) when it chooses to route through vaultd instead of
+Claude Code (`/lect`) when it chooses to route through vaultd instead of
 writing files directly.
 
 ---

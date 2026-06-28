@@ -1,6 +1,6 @@
 # API Contract
 
-Loaded by `/upgrade` only. Source of truth is the route files themselves
+Loaded by `/feat` only. Source of truth is the route files themselves
 — this doc is a map, keep it in sync when routes change.
 
 ## Next.js API routes (`app/api/`)
@@ -17,7 +17,7 @@ Loaded by `/upgrade` only. Source of truth is the route files themselves
 Error shape is always `{ error: string }` with a non-2xx status.
 
 There are no auth routes. There is no lesson-generation route.
-Content creation happens via Claude Code (`/generate`), not the web app.
+Content creation happens via Claude Code (`/lect`), not the web app.
 
 ## vaultd (Go helper, default `127.0.0.1:4321`)
 

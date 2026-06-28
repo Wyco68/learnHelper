@@ -1,6 +1,6 @@
 # Coding Style
 
-Loaded by `/upgrade` only. Conventions already in use across this repo —
+Loaded by `/feat` only. Conventions already in use across this repo —
 match them, don't introduce a second style.
 
 ## TypeScript / Next.js

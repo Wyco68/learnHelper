@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/ensure-vaultd.mjs",
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "prestart": "node scripts/ensure-vaultd.mjs",
     "build": "next build",
     "start": "next start",

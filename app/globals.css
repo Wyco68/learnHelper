@@ -41,3 +41,50 @@ body {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ── Mermaid diagram theme ─────────────────────────────────────────────── */
+.mermaid-diagram svg {
+  overflow: visible;
+}
+
+/* Node shape transitions for hover effect */
+.mermaid-diagram .node rect,
+.mermaid-diagram .node circle,
+.mermaid-diagram .node ellipse,
+.mermaid-diagram .node polygon,
+.mermaid-diagram .node path {
+  transition: filter 0.2s ease;
+}
+
+/* Subtle glow on hover */
+.mermaid-diagram .node:hover rect,
+.mermaid-diagram .node:hover circle,
+.mermaid-diagram .node:hover ellipse,
+.mermaid-diagram .node:hover polygon,
+.mermaid-diagram .node:hover path {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(59, 130, 246, 0.55));
+}
+
+/* Decision nodes (diamond/polygon) — cyan accent distinct from the main blue nodes */
+.mermaid-diagram .node polygon {
+  fill: #0e7490;
+  stroke: #67e8f9;
+}
+
+/* Start/End nodes (circles) — stronger emphasis */
+.mermaid-diagram .node circle {
+  stroke-width: 2.5px;
+  stroke: #93c5fd;
+}
+
+/* Edge paths — slightly thicker */
+.mermaid-diagram .edgePath path,
+.mermaid-diagram path.path {
+  stroke-width: 2px !important;
+}
+
+/* Subgraph (cluster) container — rounded, dark-blue tint */
+.mermaid-diagram .cluster rect {
+  rx: 8px;
+  ry: 8px;
+}

@@ -1,4 +1,4 @@
-# /generate
+# /lect
 
 ## Purpose
 Lesson content creation and maintenance only.
@@ -43,8 +43,23 @@ When the folder does not exist yet, create the directory and a new `index.json`
 containing just the one entry. When the folder exists, read the current
 `index.json`, append (or update) the entry, and write it back.
 
-## After saving (auto-open)
-After writing/updating a lesson's `.html` + `index.json`, run:
+## After saving (validate, then auto-open)
+After writing/updating a lesson's `.html`, **before** touching `index.json`
+or opening the browser, validate it against the contract:
+
+```
+node scripts/validate-lesson.mjs vault/<folder-slug>/<id>.html
+```
+
+If it reports violations, fix the HTML and re-run until it passes — do not
+save a lesson that fails validation. This is the strict-rules enforcement
+for [html-output-contract.md](../../docs/html-output-contract.md): the
+contract drifted silently before (bare `Concept` headings, duplicate
+`Exam Tips`/`Remember` headings, a missing `<h1>` title) and nobody
+noticed until a user did. The validator exists so that never happens
+again without being caught immediately.
+
+Once it passes, update `index.json`, then run:
 
 ```
 node scripts/open-app.mjs
@@ -52,8 +67,8 @@ node scripts/open-app.mjs
 
 It ensures vaultd and `next dev` are both up (reusing whichever is already
 running — never starts a duplicate) and opens the user's default browser
-to the app. This is a build-tooling script the app already ships with,
-not a code change — running it does not violate the restrictions below.
+to the app. Both scripts are build tooling the app already ships with,
+not a code change — running them does not violate the restrictions below.
 
 ## Restrictions (strict)
 - Never modify application code (`app/`, `components/`, `lib/`, `tools/`).
@@ -66,4 +81,4 @@ not a code change — running it does not violate the restrictions below.
 
 ## Redirect rule
 If the request is about the application instead of lesson content, stop
-and tell the user to use `/upgrade`. Do not do app work here.
+and tell the user to use `/feat`. Do not do app work here.

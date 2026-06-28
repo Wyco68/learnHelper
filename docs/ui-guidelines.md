@@ -1,6 +1,6 @@
 # UI Guidelines
 
-Loaded by `/upgrade` only. Conventions already in use — match them.
+Loaded by `/feat` only. Conventions already in use — match them.
 
 ## Theme
 Dark, code-editor look. Tailwind utility classes only, no separate CSS
