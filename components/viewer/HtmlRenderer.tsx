@@ -62,7 +62,7 @@ function nodeToReact(node: Node, key: number): ReactNode {
     return (
       <h2
         key={key}
-        className="!mt-14 !text-4xl !font-bold !text-blue-300"
+        className="!mt-14 !text-4xl !font-bold !text-blue-700 dark:!text-blue-300"
       >
         {childrenToReact(el)}
       </h2>
@@ -75,7 +75,7 @@ function nodeToReact(node: Node, key: number): ReactNode {
     return (
       <h2
         key={key}
-        className="!mt-2 !text-4xl !font-bold !text-purple-300"
+        className="!mt-2 !text-4xl !font-bold !text-purple-700 dark:!text-purple-300"
       >
         {childrenToReact(el)}
       </h2>
@@ -110,7 +110,7 @@ export default function HtmlRenderer({ html }: { html: string }) {
       : null;
 
   return (
-    <div className="prose prose-invert prose-lg max-w-none prose-headings:font-semibold prose-h1:text-5xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-lg prose-li:text-lg prose-table:text-base">
+    <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-semibold prose-h1:text-5xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-lg prose-li:text-lg prose-table:text-base">
       {doc ? childrenToReact(doc.body) : null}
     </div>
   );

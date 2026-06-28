@@ -19,6 +19,22 @@ genuinely needs to know the storage layout (the three docs above are normally en
 - Update the explanation format/content.
 - Save generated lesson files to `vault/`.
 
+## Source ingestion (strict — always run this first)
+Every uploaded file (PDF, PPTX, DOCX, image, etc.) must go through the
+`markitdown` MCP server before you write a single word of lesson content.
+Convert the upload to Markdown with it, then read every point from that
+Markdown — don't eyeball the raw file's rendering and don't skip the
+conversion because the file "looks simple."
+
+This exists because raw PDFs/slides garble text extraction (column order,
+embedded tables, image-only text) in ways that are easy to miss but corrupt
+the lesson — markitdown's output is the reliable source of truth.
+
+If the `markitdown` tool isn't available in this session (not connected —
+check the tool list), say so explicitly and ask the user to restart the
+session so `.mcp.json` picks it up, rather than silently falling back to
+reading the raw file yourself.
+
 ## Save path (direct file writes)
 
 The web application no longer handles generation. Write lesson files directly:

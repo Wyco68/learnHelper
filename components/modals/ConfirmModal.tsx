@@ -19,12 +19,12 @@ export default function ConfirmModal({
 }) {
   return (
     <Modal title={title} onClose={onCancel}>
-      <p className="mb-4 text-sm text-gray-300">{message}</p>
+      <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">{message}</p>
       <div className="flex justify-end gap-2">
         <button
           onClick={onCancel}
           disabled={busy}
-          className="rounded px-3 py-1.5 text-sm text-gray-300 hover:bg-white/5 disabled:opacity-50"
+          className="rounded px-3 py-1.5 text-sm text-gray-700 hover:bg-black/5 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-white/5"
         >
           Cancel
         </button>

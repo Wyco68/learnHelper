@@ -62,7 +62,7 @@ export default function FileTreeNode({
       <div className="group flex items-center">
         <button
           onClick={() => setOpen((o) => !o)}
-          className="flex flex-1 items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-gray-200 hover:bg-white/5"
+          className="flex flex-1 items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-gray-800 hover:bg-black/5 dark:text-gray-200 dark:hover:bg-white/5"
         >
           <span className="text-gray-500">{open ? "▾" : "▸"}</span>
           <span className="truncate font-medium">{folder.name.replace(/-/g, " ")}</span>
@@ -80,7 +80,7 @@ export default function FileTreeNode({
       </div>
 
       {open && (
-        <div className="ml-4 border-l border-white/10 pl-2">
+        <div className="ml-4 border-l border-black/10 pl-2 dark:border-white/10">
           {folder.lessons.length === 0 && (
             <p className="px-2 py-1 text-xs text-gray-500">No lessons yet</p>
           )}
@@ -92,7 +92,9 @@ export default function FileTreeNode({
                 <button
                   onClick={() => onSelect({ folder: folder.name, id: lesson.id })}
                   className={`flex-1 truncate rounded px-2 py-1 text-left text-sm ${
-                    isActive ? "bg-blue-600/20 text-blue-300" : "text-gray-300 hover:bg-white/5"
+                    isActive
+                      ? "bg-blue-600/10 text-blue-700 dark:bg-blue-600/20 dark:text-blue-300"
+                      : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/5"
                   }`}
                   title={lesson.title}
                 >

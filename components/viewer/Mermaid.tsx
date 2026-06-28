@@ -3,6 +3,36 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
+// Diagrams always render on a dark, fixed background with white text —
+// independent of the app's light/dark toggle. Mermaid's text color and
+// background are coupled (labels float outside node fills), so the only
+// way to guarantee white text stays legible in light mode too is to keep
+// the diagram's own background dark always.
+const DIAGRAM_VARS = {
+  background: "#0a0e1a",
+  mainBkg: "#2563eb",
+  nodeBorder: "#60a5fa",
+  clusterBkg: "#0f1f3d",
+  clusterBorder: "#1e40af",
+  primaryColor: "#2563eb",
+  primaryBorderColor: "#60a5fa",
+  primaryTextColor: "#ffffff",
+  secondaryColor: "#1d4ed8",
+  secondaryBorderColor: "#3b82f6",
+  secondaryTextColor: "#ffffff",
+  tertiaryColor: "#0f1f3d",
+  tertiaryBorderColor: "#1e40af",
+  tertiaryTextColor: "#ffffff",
+  lineColor: "#3b82f6",
+  textColor: "#ffffff",
+  titleColor: "#ffffff",
+  edgeLabelBackground: "#0a0e1a",
+  noteBkgColor: "#1e3a5f",
+  noteTextColor: "#ffffff",
+  noteBorderColor: "#3b82f6",
+  fontSize: "19px",
+};
+
 let mermaidInitialized = false;
 
 async function getMermaid() {
@@ -13,30 +43,7 @@ async function getMermaid() {
       theme: "dark",
       securityLevel: "loose",
       fontFamily: "ui-sans-serif, system-ui, sans-serif",
-      themeVariables: {
-        background: "#0a0e1a",
-        mainBkg: "#2563eb",
-        nodeBorder: "#60a5fa",
-        clusterBkg: "#0f1f3d",
-        clusterBorder: "#1e40af",
-        primaryColor: "#2563eb",
-        primaryBorderColor: "#60a5fa",
-        primaryTextColor: "#ffffff",
-        secondaryColor: "#1d4ed8",
-        secondaryBorderColor: "#3b82f6",
-        secondaryTextColor: "#ffffff",
-        tertiaryColor: "#0f1f3d",
-        tertiaryBorderColor: "#1e40af",
-        tertiaryTextColor: "#93c5fd",
-        lineColor: "#3b82f6",
-        textColor: "#dbeafe",
-        titleColor: "#93c5fd",
-        edgeLabelBackground: "#0a0e1a",
-        noteBkgColor: "#1e3a5f",
-        noteTextColor: "#dbeafe",
-        noteBorderColor: "#3b82f6",
-        fontSize: "19px",
-      },
+      themeVariables: DIAGRAM_VARS,
     });
     mermaidInitialized = true;
   }
@@ -78,18 +85,18 @@ export default function Mermaid({ code }: { code: string }) {
 
   if (error) {
     return (
-      <div className="my-5 rounded-md border border-red-800/60 bg-red-950/30 p-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-300">
+      <div className="my-5 rounded-md border border-red-300 bg-red-50 p-4 dark:border-red-800/60 dark:bg-red-950/30">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
           Diagram failed to render
         </p>
-        <pre className="overflow-x-auto text-xs text-red-200">{code.trim()}</pre>
+        <pre className="overflow-x-auto text-xs text-red-700 dark:text-red-200">{code.trim()}</pre>
       </div>
     );
   }
 
   if (!svg) {
     return (
-      <div className="my-6 flex h-48 items-center justify-center rounded-md border border-white/10 bg-white/[0.02] text-base text-gray-500">
+      <div className="my-6 flex h-48 items-center justify-center rounded-md border border-black/10 bg-black/[0.02] text-base text-gray-500 dark:border-white/10 dark:bg-white/[0.02]">
         Rendering diagram...
       </div>
     );

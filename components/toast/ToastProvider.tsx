@@ -44,8 +44,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             className={`rounded-md border px-4 py-2 text-sm shadow-lg ${
               t.kind === "success"
-                ? "border-emerald-800/60 bg-emerald-950/90 text-emerald-200"
-                : "border-red-800/60 bg-red-950/90 text-red-200"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/90 dark:text-emerald-200"
+                : "border-red-300 bg-red-50 text-red-800 dark:border-red-800/60 dark:bg-red-950/90 dark:text-red-200"
             }`}
           >
             {t.message}

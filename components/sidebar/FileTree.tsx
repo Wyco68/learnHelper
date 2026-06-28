@@ -15,11 +15,11 @@ export default function FileTree({
   onChanged: () => void;
 }) {
   if (!folders) {
-    return <p className="px-2 py-1 text-sm text-gray-500">Loading...</p>;
+    return <p className="px-2 py-1 text-sm text-gray-500 dark:text-gray-500">Loading...</p>;
   }
 
   if (folders.length === 0) {
-    return <p className="px-2 py-1 text-sm text-gray-500">No subjects yet.</p>;
+    return <p className="px-2 py-1 text-sm text-gray-500 dark:text-gray-500">No subjects yet.</p>;
   }
 
   return (
