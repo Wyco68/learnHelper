@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/ensure-vaultd.mjs",
     "dev": "next dev",
+    "prestart": "node scripts/ensure-vaultd.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

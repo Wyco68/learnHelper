@@ -15,6 +15,7 @@ begin with exactly one of:
 
 - `/generate`
 - `/upgrade`
+- `/bug`
 
 If a prompt does not begin with one of these commands:
 
@@ -36,12 +37,15 @@ Start your request with one of:
 
 /upgrade
 - Application development and project improvements.
+
+/bug
+- Diagnose and fix an error (paste the error after the command).
 ```
 
 Do not make exceptions. Do not infer which command the user intended. Wait
 until a valid command is provided before proceeding.
 
-## The two commands
+## The three commands
 - **`/generate`** — [.claude/commands/generate.md](.claude/commands/generate.md).
   Lesson generation and maintenance only. Loads only
   `docs/teaching-guidelines.md`, `docs/html-output-contract.md`,
@@ -49,6 +53,10 @@ until a valid command is provided before proceeding.
 - **`/upgrade`** — [.claude/commands/upgrade.md](.claude/commands/upgrade.md).
   Application development only. Loads only `docs/architecture.md`,
   `docs/coding-style.md`, `docs/ui-guidelines.md`, `docs/api-contract.md`.
+- **`/bug`** — [.claude/commands/bug.md](.claude/commands/bug.md).
+  `/upgrade`-scoped shortcut: error text typed/pasted after the command is
+  the bug report — diagnose and fix it under `/upgrade`'s rules. Same doc
+  set as `/upgrade`.
 
 ## Never mix responsibilities (strict)
 Each command is self-contained and loads only its own docs. A request that

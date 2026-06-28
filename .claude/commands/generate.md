@@ -43,6 +43,18 @@ When the folder does not exist yet, create the directory and a new `index.json`
 containing just the one entry. When the folder exists, read the current
 `index.json`, append (or update) the entry, and write it back.
 
+## After saving (auto-open)
+After writing/updating a lesson's `.html` + `index.json`, run:
+
+```
+node scripts/open-app.mjs
+```
+
+It ensures vaultd and `next dev` are both up (reusing whichever is already
+running — never starts a duplicate) and opens the user's default browser
+to the app. This is a build-tooling script the app already ships with,
+not a code change — running it does not violate the restrictions below.
+
 ## Restrictions (strict)
 - Never modify application code (`app/`, `components/`, `lib/`, `tools/`).
 - Never modify the UI.
