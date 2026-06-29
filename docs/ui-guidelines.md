@@ -48,10 +48,38 @@ base body color).
 Lesson HTML is never inserted via `dangerouslySetInnerHTML`. It's parsed
 and walked node-by-node in
 [components/viewer/HtmlRenderer.tsx](../components/viewer/HtmlRenderer.tsx),
-mapping each allowed tag to a real React element so callouts and Mermaid
-diagrams get their own components. Any new tag in the output contract
-(see [html-output-contract.md](html-output-contract.md)) needs a matching
-case added there.
+mapping each allowed tag to a real React element. Four element types get
+intercepted for richer rendering:
+
+- `<blockquote>` beginning with a callout label → `Callout` component.
+- `<div class="mermaid">` → `Mermaid` component (client-side SVG render).
+- `<div class="viz">` JSON `{type, title?, data}` → `VizRenderer`, which
+  dispatches to the correct component via the visualization registry.
+- `<div class="viz-{type}">` legacy JSON → legacy dispatch (backward compat;
+  existing lessons continue to work without modification).
+
+### Visualization registry
+
+[components/viewer/visualizations/registry.tsx](../components/viewer/visualizations/registry.tsx)
+maps every viz type string to a render function. `VizRenderer` looks up the
+type, merges the outer `title` into `data`, and calls the function.
+
+| Type | Component | Notes |
+|---|---|---|
+| `process-flow` / `pipeline` | `ProcessFlow` | linear step chain |
+| `timeline` / `lifecycle` | `Timeline` | ordered events with inline desc |
+| `layer-stack` | `LayerStack` | stacked colored cards, top = first |
+| `block-diagram` | `BlockDiagram` | CSS grid of labeled blocks |
+| `memory-layout` | `MemoryLayout` | narrow column, high→low address |
+| `comparison-table` | `ComparisonTable` | N×M structured comparison |
+| `hierarchy-tree` / `tree` | `HierarchyTree` | recursive indented tree |
+| `sequence` / `state-machine` / `decision-tree` / `graph` / `network-topology` | Mermaid | `data.mermaid` = source string |
+
+**To add a new viz type** — two steps, no other files need to change:
+1. Create `components/viewer/visualizations/MyComponent.tsx`.
+2. Add one line to `registry.tsx`: `"my-type": (d) => <MyComponent data={d as MyData} />,`
+
+Then tell `/lect` to document the JSON shape in `docs/html-output-contract.md`.
 
 ## Motion
 `framer-motion` for the lesson-switch fade/slide

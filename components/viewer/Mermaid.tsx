@@ -3,55 +3,77 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-// Diagrams always render on a dark, fixed background with white text —
-// independent of the app's light/dark toggle. Mermaid's text color and
-// background are coupled (labels float outside node fills), so the only
-// way to guarantee white text stays legible in light mode too is to keep
-// the diagram's own background dark always.
-const DIAGRAM_VARS = {
-  background: "#0a0e1a",
-  mainBkg: "#2563eb",
-  nodeBorder: "#60a5fa",
-  clusterBkg: "#0f1f3d",
+// Dark theme: background matches computed dark:bg-blue-950/20 over the app's
+// #0d1117 base (~#0f1523). Light text on dark blue — same palette as before.
+const DARK_VARS = {
+  background: "#0f1523",
+  mainBkg: "#1e3a8a",
+  nodeBorder: "#3b82f6",
+  clusterBkg: "#0f172a",
   clusterBorder: "#1e40af",
-  primaryColor: "#2563eb",
-  primaryBorderColor: "#60a5fa",
-  primaryTextColor: "#ffffff",
+  primaryColor: "#1e3a8a",
+  primaryBorderColor: "#3b82f6",
+  primaryTextColor: "#dbeafe",
   secondaryColor: "#1d4ed8",
-  secondaryBorderColor: "#3b82f6",
-  secondaryTextColor: "#ffffff",
-  tertiaryColor: "#0f1f3d",
+  secondaryBorderColor: "#60a5fa",
+  secondaryTextColor: "#dbeafe",
+  tertiaryColor: "#0f172a",
   tertiaryBorderColor: "#1e40af",
-  tertiaryTextColor: "#ffffff",
-  lineColor: "#3b82f6",
-  textColor: "#ffffff",
-  titleColor: "#ffffff",
-  edgeLabelBackground: "#0a0e1a",
-  noteBkgColor: "#1e3a5f",
-  noteTextColor: "#ffffff",
+  tertiaryTextColor: "#dbeafe",
+  lineColor: "#60a5fa",
+  textColor: "#dbeafe",
+  titleColor: "#dbeafe",
+  edgeLabelBackground: "#0f1523",
+  noteBkgColor: "#1e3a8a",
+  noteTextColor: "#dbeafe",
   noteBorderColor: "#3b82f6",
   fontSize: "19px",
 };
 
-let mermaidInitialized = false;
+// Light theme: background matches bg-blue-50 (#eff6ff). Dark text on light blue.
+const LIGHT_VARS = {
+  background: "#eff6ff",
+  mainBkg: "#bfdbfe",
+  nodeBorder: "#2563eb",
+  clusterBkg: "#dbeafe",
+  clusterBorder: "#93c5fd",
+  primaryColor: "#bfdbfe",
+  primaryBorderColor: "#2563eb",
+  primaryTextColor: "#1e3a8a",
+  secondaryColor: "#dbeafe",
+  secondaryBorderColor: "#3b82f6",
+  secondaryTextColor: "#1e40af",
+  tertiaryColor: "#eff6ff",
+  tertiaryBorderColor: "#93c5fd",
+  tertiaryTextColor: "#1e3a8a",
+  lineColor: "#2563eb",
+  textColor: "#1e3a8a",
+  titleColor: "#1e3a8a",
+  edgeLabelBackground: "#eff6ff",
+  noteBkgColor: "#dbeafe",
+  noteTextColor: "#1e40af",
+  noteBorderColor: "#93c5fd",
+  fontSize: "19px",
+};
 
-async function getMermaid() {
+// Re-initialize only when the mode flips, not on every render.
+let lastInitMode: boolean | null = null;
+
+async function getMermaid(isDark: boolean) {
   const mermaid = (await import("mermaid")).default;
-  if (!mermaidInitialized) {
+  if (lastInitMode !== isDark) {
     mermaid.initialize({
       startOnLoad: false,
-      theme: "dark",
+      theme: "base",
       securityLevel: "loose",
       fontFamily: "ui-sans-serif, system-ui, sans-serif",
-      themeVariables: DIAGRAM_VARS,
+      themeVariables: isDark ? DARK_VARS : LIGHT_VARS,
     });
-    mermaidInitialized = true;
+    lastInitMode = isDark;
   }
   return mermaid;
 }
 
-// Make the rendered SVG fill its container width instead of mermaid's
-// default fixed max-width, so diagrams render large and clear.
 function makeResponsive(svg: string): string {
   return svg
     .replace(/style="max-width:[^"]*"/, 'style="max-width:100%"')
@@ -61,6 +83,16 @@ function makeResponsive(svg: string): string {
 export default function Mermaid({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => setIsDark(root.classList.contains("dark"));
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,19 +101,22 @@ export default function Mermaid({ code }: { code: string }) {
 
     (async () => {
       try {
-        const mermaid = await getMermaid();
+        const mermaid = await getMermaid(isDark);
         const id = `mermaid-${Math.random().toString(36).slice(2)}`;
         const { svg } = await mermaid.render(id, code.trim());
         if (!cancelled) setSvg(makeResponsive(svg));
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message ?? "failed to render diagram");
+      } catch (err: unknown) {
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "failed to render diagram"
+          );
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [code, isDark]);
 
   if (error) {
     return (
@@ -89,14 +124,16 @@ export default function Mermaid({ code }: { code: string }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
           Diagram failed to render
         </p>
-        <pre className="overflow-x-auto text-xs text-red-700 dark:text-red-200">{code.trim()}</pre>
+        <pre className="overflow-x-auto text-xs text-red-700 dark:text-red-200">
+          {code.trim()}
+        </pre>
       </div>
     );
   }
 
   if (!svg) {
     return (
-      <div className="my-6 flex h-48 items-center justify-center rounded-md border border-black/10 bg-black/[0.02] text-base text-gray-500 dark:border-white/10 dark:bg-white/[0.02]">
+      <div className="my-6 flex h-48 items-center justify-center rounded-md border border-blue-300 bg-blue-50 text-sm text-blue-400 dark:border-blue-800/50 dark:bg-blue-950/20 dark:text-blue-600">
         Rendering diagram...
       </div>
     );
@@ -107,7 +144,7 @@ export default function Mermaid({ code }: { code: string }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="mermaid-diagram my-6 overflow-x-auto rounded-md border border-blue-900/50 bg-[#0a0e1a] p-8"
+      className="mermaid-diagram my-6 overflow-x-auto rounded-md border border-blue-300 bg-blue-50 p-8 dark:border-blue-800/50 dark:bg-blue-950/20"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

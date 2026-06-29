@@ -19,16 +19,41 @@ h1 h2 h3 p ul ol li
 table thead tbody tr td th
 pre code blockquote strong em
 div class="mermaid"
+div class="viz-process-flow"
+div class="viz-timeline"
+div class="viz-layer-stack"
+div class="viz-block-diagram"
 ```
 
 - No inline styles, no `<style>`, no `<script>`.
-- No custom classes except `class="mermaid"` on diagram containers.
+- No custom classes except the visualization classes listed above.
 - No styling decisions at all — presentation belongs entirely to React
   (colors, spacing, typography, callouts, tables, code blocks, diagrams,
   animation, dark mode). See [ui-guidelines.md](ui-guidelines.md) for how
   the app renders this.
-- Diagrams = Mermaid source inside `<div class="mermaid">...</div>`,
-  hydrated client-side by the React Mermaid component.
+
+**Mermaid diagrams** (for sequences, state machines, decision trees, and
+complex connected graphs): Mermaid source inside `<div class="mermaid">...</div>`.
+Write standard Mermaid syntax only. Never include `style`, `classDef`,
+`linkStyle`, `%%{init`, theme directives, or colors — the app sets all
+styling. Hydrated client-side by the React Mermaid component.
+
+**Structured visualization components** (for everything else): a `<div>`
+with one of the four viz classes listed above, containing only a JSON
+object as its text content — no HTML inside, no line breaks. The React
+component parses the JSON and owns all presentation.
+
+| Class | Best for | JSON shape |
+|---|---|---|
+| `viz-process-flow` | Sequential chains, request/response flow, algorithms | `{"steps":["A","B","C"]}` or `{"steps":[{"label":"A","desc":"tooltip"}],"direction":"vertical","title":"optional"}` |
+| `viz-timeline` | Boot sequences, scheduling, ordered events | `{"title":"optional","items":[{"label":"Step","desc":"detail"}]}` |
+| `viz-layer-stack` | OSI model, TCP/IP, memory hierarchy, software stacks | `{"title":"optional","layers":[{"name":"Application","detail":"HTTP, FTP"},...]}` — first element renders at the top |
+| `viz-block-diagram` | CPU components, hardware blocks, peer components | `{"title":"optional","blocks":["ALU","CU"],"columns":2}` or `{"blocks":[{"label":"A","desc":"detail"}]}` |
+
+Use `viz-*` when the concept maps cleanly to one of those shapes.
+Use Mermaid when the diagram needs arrows between arbitrary nodes,
+subgraphs, or genuine sequence/state/decision-tree logic.
+Use a `<table>` for comparisons — never a diagram.
 
 ## Heading scheme (strict — only these, never deeper than `h3`, no emoji)
 Every lesson uses this fixed set of headings, repeated per concept.
@@ -91,6 +116,10 @@ place of the closing `Exam Tip:`/`Remember:` pair.
   processes — each `<li>` = one action only.
 - **Tables:** use a `<table>` whenever comparing 2+ concepts/protocols/
   terms — never compare inside prose. Keep cells short.
-- **Diagrams:** one Mermaid diagram per concept, inside that concept's
-  section, with a one-line explanation right after it.
+- **Diagrams:** one visualization per concept (Mermaid or a `viz-*`
+  component — choose the type that best communicates the concept), inside
+  that concept's section, followed by a one-line explanation. Pick the
+  simplest type that works: prefer `viz-layer-stack` over a `flowchart TD`
+  chain, `viz-process-flow` over a simple `flowchart LR`, `viz-timeline`
+  over a numbered list when order and progression matter.
 - **Code:** `<pre><code>` for code/commands, kept small and focused.

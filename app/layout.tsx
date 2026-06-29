@@ -4,7 +4,7 @@ import { ToastProvider } from "@/components/toast/ToastProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "University Notes",
+  title: "Notes",
   description: "Lesson notes vault",
 };
 

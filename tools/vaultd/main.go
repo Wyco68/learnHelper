@@ -1,4 +1,4 @@
-// Command vaultd is a tiny filesystem helper for University Notes.
+// Command vaultd is a tiny filesystem helper for Notes.
 //
 // It is deliberately dumb: it performs raw filesystem I/O on a vault directory
 // and contains ZERO business logic. It never decides folder names, filenames,
