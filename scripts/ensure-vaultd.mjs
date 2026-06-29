@@ -7,6 +7,7 @@
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
 
 const VAULTD_URL = process.env.VAULTD_URL || "http://127.0.0.1:4321";
 const VAULTD_DIR = path.join(process.cwd(), "tools", "vaultd");
@@ -51,19 +52,37 @@ export async function ensureVaultd() {
   }
 
   console.log("starting vaultd...");
-  spawn(BIN_PATH, [], {
+  // stdio is piped (not "ignore") so a bind failure — e.g. another process
+  // already holding the port — has its message captured instead of
+  // silently discarded, which used to surface as an opaque "did not come
+  // up within 5s" with no way to tell a port conflict from a slow start.
+  let output = "";
+  const child = spawn(BIN_PATH, [], {
     cwd: process.cwd(),
     detached: true,
-    stdio: "ignore",
-  }).unref();
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  child.stdout.on("data", (d) => (output += d));
+  child.stderr.on("data", (d) => (output += d));
+  child.unref();
 
-  if (!(await waitUntilUp(5000))) {
-    throw new Error(`vaultd did not come up at ${VAULTD_URL} within 5s`);
+  const up = await waitUntilUp(5000);
+  if (!up) {
+    const detail = output.trim();
+    const hint = /address already in use|bind:/i.test(detail)
+      ? ` Another process is already using ${VAULTD_URL} — stop it (check \`netstat -ano | findstr 4321\`) and try again.`
+      : "";
+    throw new Error(
+      `vaultd did not come up at ${VAULTD_URL} within 5s.${hint}${detail ? ` vaultd output: ${detail}` : ""}`
+    );
   }
   console.log(`vaultd up at ${VAULTD_URL}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL handles Windows drive letters/backslashes correctly — a
+// plain `file://${process.argv[1]}` never matched import.meta.url on
+// Windows, so running this file directly silently no-op'd.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   ensureVaultd().catch((err) => {
     console.error(err.message);
     process.exit(1);

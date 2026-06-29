@@ -1,8 +1,8 @@
-# Project Specification — University Notes
+# Project Specification — Notes
 
 ## 1. Purpose
 
-University Notes is a web-based lesson library. It presents clean, deeply-explained
+Notes is a web-based lesson library. It presents clean, deeply-explained
 study notes in a code-editor-style reader. Notes are written in plain high-school-level
 language with technically correct terminology, aimed at an Information Systems &
 Network Engineering program.
@@ -114,7 +114,7 @@ Gitignored and portable — never committed.
 ### Sidebar
 
 ```
-University Notes
+Notes
 
 Subjects             [+]
   <Folder 1>
@@ -192,7 +192,36 @@ No AI SDK. No authentication. No upload handling. No streaming.
 
 ---
 
-## 9. Out of scope
+## 9. Setup and running
+
+Requires:
+
+- [Node.js](https://nodejs.org/) 20+ and npm.
+- [Go](https://go.dev/dl/) 1.21+ (only to build the filesystem helper).
+- A Claude subscription (Pro/Max) and the [Claude Code](https://claude.com/claude-code)
+  CLI, used to run the `/lect` note-writing command.
+
+```bash
+npm install
+
+cd tools/vaultd
+go build -o vaultd.exe .   # macOS/Linux: go build -o vaultd .
+cd ../..
+```
+
+Run both processes (separate terminals):
+
+```bash
+./tools/vaultd/vaultd.exe   # filesystem helper, default :4321
+npm run dev                 # http://localhost:3000 -> /vault
+```
+
+Writing a note happens separately, via Claude Code in a terminal, using the
+`/lect` command (see [CLAUDE.md](CLAUDE.md)) — not through the website.
+
+---
+
+## 10. Out of scope
 
 - No database (filesystem via Go helper is the store).
 - No deployment/hosting beyond local dev.

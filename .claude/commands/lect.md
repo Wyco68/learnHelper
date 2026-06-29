@@ -19,21 +19,43 @@ genuinely needs to know the storage layout (the three docs above are normally en
 - Update the explanation format/content.
 - Save generated lesson files to `vault/`.
 
-## Source ingestion (strict — always run this first)
-Every uploaded file (PDF, PPTX, DOCX, image, etc.) must go through the
-`markitdown` MCP server before you write a single word of lesson content.
-Convert the upload to Markdown with it, then read every point from that
-Markdown — don't eyeball the raw file's rendering and don't skip the
-conversion because the file "looks simple."
+## Strict flow (run in this exact order)
 
-This exists because raw PDFs/slides garble text extraction (column order,
-embedded tables, image-only text) in ways that are easy to miss but corrupt
-the lesson — markitdown's output is the reliable source of truth.
+1. **Resolve folder name.** The text after `/lect` (e.g. `/lect Wireless
+   Network`) names the **destination folder/subject**, nothing else — it is
+   never a claim about file content and must never be checked against the
+   file. List existing folders under `vault/` and compare:
+   - Exact or obvious shortcut/typo match (e.g. case, abbreviation, minor
+     misspelling) of an existing folder → use that existing folder.
+   - No reasonable match → ask the user (one question): create this as a
+     **new** folder, or did they mean to **retype** the name to match an
+     existing one? Do not guess silently either way.
+   - Never validate the folder name against the uploaded file's actual topic.
+     A mismatch between folder name and file content is expected and fine.
 
-If the `markitdown` tool isn't available in this session (not connected —
-check the tool list), say so explicitly and ask the user to restart the
-session so `.mcp.json` picks it up, rather than silently falling back to
-reading the raw file yourself.
+2. **Convert via markitdown.** The uploaded file is already attached to the
+   conversation — never search the filesystem (`Glob`/`find`/etc.) for it,
+   read the attachment directly. Every uploaded file (PDF, PPTX, DOCX, image,
+   etc.) must go through the `markitdown` MCP server before you write a
+   single word of lesson content. Convert the upload to Markdown, then read
+   every point from that Markdown output — don't eyeball the raw file's
+   rendering and don't skip conversion because the file "looks simple."
+
+   This exists because raw PDFs/slides garble text extraction (column order,
+   embedded tables, image-only text) in ways that are easy to miss but
+   corrupt the lesson — markitdown's output is the reliable source of truth.
+
+   If the `markitdown` tool isn't available in this session (not connected —
+   check the tool list), say so explicitly and ask the user to restart the
+   session so `.mcp.json` picks it up, rather than silently falling back to
+   reading the raw file yourself.
+
+3. **Generate the lesson** from the markitdown output, per
+   [teaching-guidelines.md](../../docs/teaching-guidelines.md) and
+   [lesson-template.md](../../docs/lesson-template.md). Lesson **title**
+   always comes from the real file content, never from the `/lect` argument.
+
+4. **Save** into the folder resolved in step 1 — see Save path below.
 
 ## Save path (direct file writes)
 

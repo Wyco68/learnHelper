@@ -18,9 +18,8 @@ base body color).
 
 | Action | Color |
 |---|---|
-| Primary action (Connect, Create, Generate, Upload) | `bg-blue-600` / hover `bg-blue-500` |
-| Destructive action (Delete, Disconnect) | `bg-red-600` / hover `bg-red-500` |
-| Connected/success state | `text-emerald-300`, `bg-emerald-400` dot |
+| Primary action (Create) | `bg-blue-600` / hover `bg-blue-500` |
+| Destructive action (Delete) | `bg-red-600` / hover `bg-red-500` |
 | Success toast | `border-emerald-800/60 bg-emerald-950/90 text-emerald-200` |
 | Error toast | `border-red-800/60 bg-red-950/90 text-red-200` |
 
