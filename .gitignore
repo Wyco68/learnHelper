@@ -18,3 +18,10 @@ tools/vaultd/vaultd
 /node_modules/
 /.next/
 .env.local
+
+# Desktop shell — Rust build output and generated sidecar/resource artifacts
+# (see scripts/ensure-desktop-sidecars.mjs, scripts/prepare-desktop-resources.mjs)
+desktop/target/
+desktop/bin/
+desktop/resources/
+desktop/gen/

@@ -8,6 +8,8 @@ Application development only.
 - [docs/coding-style.md](../../docs/coding-style.md)
 - [docs/ui-guidelines.md](../../docs/ui-guidelines.md)
 - [docs/api-contract.md](../../docs/api-contract.md)
+- [docs/desktop.md](../../docs/desktop.md) — only when the task touches
+  `desktop/`, `scripts/*desktop*`, or app startup/packaging.
 
 Do not load `docs/teaching-guidelines.md`, `docs/html-output-contract.md`,
 or `docs/lesson-template.md` — lesson-generation instructions are
@@ -23,6 +25,7 @@ irrelevant to application work.
 - Update architecture.
 - Modify the Go helper (`tools/vaultd/`).
 - Modify Next.js (`app/`, `components/`, `lib/`).
+- Modify the desktop shell (`desktop/`, `scripts/*desktop*`).
 - Documentation, testing, build configuration.
 
 ## Restrictions (strict)

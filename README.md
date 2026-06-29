@@ -92,11 +92,47 @@ itself → `/feat`. Never both in the same request.
 
 ---
 
-## If the web page doesn't open automatically
+## Reading your notes without `/lect`
 
-`/lect` normally starts both servers and opens your browser for you. If it
-doesn't (e.g. you're running the app without going through `/lect`), start
-it manually:
+`/lect` opens the reader for you automatically after writing a note. To open
+the reader on its own — to re-read existing notes without writing a new
+one — install the desktop app (recommended) or fall back to the browser.
+
+### Desktop app — install once, then double-click
+
+A real native window. No browser tab, no terminal left running.
+
+**1. Install it (one time):**
+
+```bash
+npm install
+npm run build:desktop
+```
+
+This takes a few minutes the first time. When it finishes, the installer
+is at:
+
+```
+desktop/target/release/bundle/nsis/Notes_<version>_x64-setup.exe
+```
+
+(an `.msi` is also built alongside it, in `bundle/msi/`, if you'd rather
+use that). Run that installer — it adds **Notes** to your Start Menu like
+any other app.
+
+**2. Run it:** open **Notes** from the Start Menu (or wherever you put a
+shortcut). That's it — no terminal, no browser, no localhost. A short
+splash screen appears while it starts, then the reader opens.
+
+To uninstall later: Settings → Apps → **Notes** → Uninstall, same as any
+Windows app.
+
+Building again after pulling app updates: re-run `npm run build:desktop`
+and re-run the new installer — it replaces the old install in place.
+
+### Browser fallback (advanced)
+
+For headless setups or quick debugging, without installing anything:
 
 ```bash
 ./tools/vaultd/vaultd.exe   # filesystem helper, default :4321
@@ -105,6 +141,10 @@ npm run dev                 # http://localhost:3000 -> /vault
 
 Run each in its own terminal, then open `http://localhost:3000/vault` in
 your browser.
+
+See [docs/desktop.md](docs/desktop.md) for the technical detail behind the
+desktop app (how it starts vaultd/Next, where it stores your vault, dev
+mode with hot reload via `npm run dev:desktop`).
 
 ---
 
@@ -135,7 +175,8 @@ flow.md                -- request-by-request data flow (creation/viewing)
 .claude/commands/      -- /lect (lesson writing) and /feat (app dev) commands
 docs/                  -- detailed rules each command loads
 _templates/             -- lesson-template.md, the fixed heading skeleton
-scripts/               -- ensure-vaultd, validate-lesson, open-app
+scripts/               -- ensure-vaultd, validate-lesson, open-app, desktop build helpers
+desktop/               -- Tauri shell (native window + startup orchestration)
 app/                   -- Next.js UI + API routes
 lib/vault/             -- naming, sanitizing, vaultd client (TypeScript)
 tools/vaultd/          -- Go filesystem helper (zero business logic)

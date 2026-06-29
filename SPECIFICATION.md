@@ -14,7 +14,10 @@ Claude Code (the CLI) is the author. The Next.js app is the reader.
 
 ## 2. Architecture
 
-Two layers, each with a single non-overlapping responsibility.
+Two layers, each with a single non-overlapping responsibility, packaged
+inside a thin desktop shell (Tauri — see [docs/desktop.md](docs/desktop.md)).
+The shell only starts/stops the other two and shows the window; it holds no
+business logic and isn't a third layer in the sense below.
 
 ### 2.1 Next.js application — read and manage
 
@@ -187,6 +190,7 @@ writing files directly.
 | Animation | `framer-motion` | Fade/slide on lesson switch |
 | Filesystem helper | Go HTTP service (`vaultd`) | Folder/lesson CRUD + tree listing |
 | Notes storage | `.html` + `index.json` under `vault/` | Source of truth; gitignored |
+| Desktop shell | Tauri (Rust) | Native window, startup orchestration, splash screen, packaging |
 
 No AI SDK. No authentication. No upload handling. No streaming.
 
@@ -198,20 +202,28 @@ Requires:
 
 - [Node.js](https://nodejs.org/) 20+ and npm.
 - [Go](https://go.dev/dl/) 1.21+ (only to build the filesystem helper).
+- [Rust](https://www.rust-lang.org/tools/install) + the platform C/C++ build
+  tools Tauri needs (only to build/run the desktop shell).
 - A Claude subscription (Pro/Max) and the [Claude Code](https://claude.com/claude-code)
   CLI, used to run the `/lect` note-writing command.
 
 ```bash
 npm install
-
-cd tools/vaultd
-go build -o vaultd.exe .   # macOS/Linux: go build -o vaultd .
-cd ../..
 ```
 
-Run both processes (separate terminals):
+**Desktop app (recommended)** — see [docs/desktop.md](docs/desktop.md) for
+full detail:
 
 ```bash
+npm run dev:desktop     # development: native window, hot reload
+npm run build:desktop   # production: installer under desktop/target/release/bundle
+```
+
+**Browser-only fallback** — two manually-started processes, no native
+window:
+
+```bash
+cd tools/vaultd && go build -o vaultd.exe . && cd ../..   # macOS/Linux: vaultd (no .exe)
 ./tools/vaultd/vaultd.exe   # filesystem helper, default :4321
 npm run dev                 # http://localhost:3000 -> /vault
 ```
